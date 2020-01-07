@@ -1,0 +1,225 @@
+plugins {
+    id "java"
+}
+
+group "com.jaspervanmerle.battlecode2020"
+version "1.0.0"
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+sourceSets {
+    main {
+        java.srcDirs = ["src"]
+        java.outputDir = file("$buildDir/classes")
+    }
+}
+
+configurations {
+    client
+
+    all {
+        resolutionStrategy.cacheDynamicVersionsFor 60, "seconds"
+    }
+}
+
+if (!project.hasProperty("classLocation")) {
+    ext.classLocation = sourceSets.main.output.classesDirs.getAsPath()
+}
+
+def replayPath = "replays/${project.property("teamA")}-vs-${project.property("teamB")}-on-%MAP%.bc20"
+
+def os = System.getProperty("os.name").toLowerCase()
+def clientName = "battlecode-client-${os.startsWith("windows") ? "win" : os.startsWith("mac") ? "mac" : "linux"}"
+
+def battlecodeVersion = new File(project.projectDir, "version.txt").text.trim()
+def battlecodeVersionUrl = "https://2020.battlecode.org/version.txt"
+
+repositories {
+    maven {
+        url "https://maven.pkg.github.com/battlecode/battlecode20"
+        credentials {
+            username = "battlecodedownloadpackage"
+            password = new URL("https://2020.battlecode.org/access.txt").text.trim()
+        }
+    }
+}
+
+dependencies {
+    implementation "org.battlecode:battlecode:$battlecodeVersion"
+    client "org.battlecode:$clientName:$battlecodeVersion"
+}
+
+task checkForUpdates {
+    group "battlecode"
+    description "Checks for Battlecode updates."
+
+    doLast {
+        def currentVersion = battlecodeVersion
+        def latestVersion = new URL(battlecodeVersionUrl).text.trim()
+
+        if (currentVersion != latestVersion) {
+            print("\n\n\nBATTLECODE UPDATE AVAILABLE ($currentVersion -> $latestVersion)\n\n\n")
+        }
+    }
+}
+
+task update {
+    group "battlecode"
+    description "Updates the Battlecode version."
+
+    doLast {
+        def currentVersion = battlecodeVersion
+        def latestVersion = new URL(battlecodeVersionUrl).text.trim()
+
+        if (currentVersion == latestVersion) {
+            println("Already using the latest version ($currentVersion)")
+            return
+        }
+
+        new File(project.projectDir, "version.txt").text = latestVersion + "\n"
+
+        println("Updated Battlecode from $currentVersion to $latestVersion, please reload the Gradle project")
+    }
+}
+
+task unpackClient(type: Copy) {
+    group "battlecode"
+    description "Downloads the client."
+
+    dependsOn configurations.client
+    dependsOn checkForUpdates
+
+    from {
+        configurations.client.collect {
+            zipTree(it)
+        }
+    }
+
+    into "client/"
+}
+
+task run(type: JavaExec) {
+    group "battlecode"
+    description "Runs a match without starting the client."
+
+    dependsOn "build"
+
+    main = "battlecode.server.Main"
+    classpath = sourceSets.main.runtimeClasspath
+    args = ["-c=-"]
+    jvmArgs = [
+        "-Dbc.server.mode=headless",
+        "-Dbc.server.map-path=maps",
+        "-Dbc.server.debug=true",
+        "-Dbc.engine.debug-methods=true",
+        "-Dbc.game.team-a=${project.property("teamA")}",
+        "-Dbc.game.team-b=${project.property("teamB")}",
+        "-Dbc.game.team-a.url=${project.property("classLocation")}",
+        "-Dbc.game.team-b.url=${project.property("classLocation")}",
+        "-Dbc.game.maps=${project.property("maps")}",
+        "-Dbc.server.save-file=${replayPath.replace("%MAP%", project.property("maps").toString())}"
+    ]
+}
+
+task runFromClient(type: JavaExec) {
+    group "battlecode"
+    description "Runs a match in the client."
+
+    dependsOn "build"
+
+    main = "battlecode.server.Main"
+    classpath = sourceSets.main.runtimeClasspath
+    args = ["-c=-"]
+    jvmArgs = [
+        "-Dbc.server.wait-for-server=true",
+        "-Dbc.server.mode=headless",
+        "-Dbc.server.map-path=maps",
+        "-Dbc.server.debug=false",
+        "-Dbc.server.robot-player-to-system-out=false",
+        "-Dbc.engine.debug-methods=true",
+        "-Dbc.game.team-a=${project.property("teamA")}",
+        "-Dbc.game.team-b=${project.property("teamB")}",
+        "-Dbc.game.team-a.url=${project.property("classLocation")}",
+        "-Dbc.game.team-b.url=${project.property("classLocation")}",
+        "-Dbc.game.maps=${project.property("maps")}",
+        "-Dbc.server.save-file=${replayPath.replace("%MAP%", project.property("maps").toString())}"
+    ]
+}
+
+task runDebug(type: JavaExec) {
+    group "battlecode"
+    description "Runs a match in debug mode."
+
+    dependsOn "build"
+
+    main = "battlecode.server.Main"
+    classpath = sourceSets.main.runtimeClasspath
+    args = ["-c=-"]
+    jvmArgs = [
+        "-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005",
+        "-Dbc.server.mode=headless",
+        "-Dbc.server.map-path=maps",
+        "-Dbc.server.debug=false",
+        "-Dbc.server.robot-player-to-system-out=true",
+        "-Dbc.engine.debug-methods=true",
+        "-Dbc.game.team-a=${project.property("teamA")}",
+        "-Dbc.game.team-b=${project.property("teamB")}",
+        "-Dbc.game.team-a.url=${project.property("classLocation")}",
+        "-Dbc.game.team-b.url=${project.property("classLocation")}",
+        "-Dbc.game.maps=${project.property("maps")}",
+        "-Dbc.server.save-file=${replayPath.replace("%MAP%", project.property("maps").toString())}"
+    ]
+}
+
+task listPlayers {
+    group "battlecode"
+    description "Lists all available players."
+
+    doLast {
+        def players = new ArrayList()
+
+        sourceSets.main.allSource.each {
+            if (it.name.equals("RobotPlayer.java")) {
+                def base = new File(project.projectDir, "src").toURI()
+                def full = it.toURI()
+                def path = base.relativize(full).toString()
+                players.push(path.substring(0, path.lastIndexOf("/")).replaceAll("/", "."))
+            }
+        }
+
+        println("Players (${players.size()}):")
+        for (def player : players) {
+            println(player)
+        }
+    }
+}
+
+task listMaps {
+    group "battlecode"
+    description "Lists all available maps."
+
+    doLast {
+        def maps = new ArrayList()
+
+        sourceSets.main.compileClasspath.each {
+            if (it.toString().contains("battlecode-2020")) {
+                def fileCollection = zipTree(it)
+                fileCollection += fileTree(new File(project.projectDir, "maps"))
+                fileCollection.each {
+                    if (it.name.endsWith(".map20")) {
+                        maps.push(it.name.substring(0, it.name.indexOf(".map20")))
+                    }
+                }
+            }
+        }
+
+        println("Maps (${maps.size()}):")
+        for (def map : maps) {
+            println(map)
+        }
+    }
+}
+
+build.group = "battlecode"
+build.dependsOn("unpackClient")

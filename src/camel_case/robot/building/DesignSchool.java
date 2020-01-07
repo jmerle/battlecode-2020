@@ -11,6 +11,6 @@ public class DesignSchool extends Building {
 
   @Override
   public void run() throws GameActionException {
-    // TODO(jmerle): Implement
+    // TODO: Implement
   }
 }

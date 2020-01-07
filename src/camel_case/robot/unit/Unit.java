@@ -14,10 +14,10 @@ public abstract class Unit extends Robot {
 
   protected boolean tryMoveTo(MapLocation target) throws GameActionException {
     if (me.canFly()) {
-      return tryMove(rc.getLocation().directionTo(target));
+      return tryMove(directionTowards(rc.getLocation(), target));
     }
 
-    Direction forward = rc.getLocation().directionTo(target);
+    Direction forward = directionTowards(rc.getLocation(), target);
     Direction left = forward.rotateLeft();
     Direction right = forward.rotateRight();
 

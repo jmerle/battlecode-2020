@@ -39,4 +39,40 @@ public abstract class Robot {
   protected Direction randomAdjacentDirection() {
     return adjacentDirections[random.nextInt(adjacentDirections.length)];
   }
+
+  protected Direction directionTowards(MapLocation from, MapLocation to) {
+    if (from.x < to.x && from.y < to.y) {
+      return Direction.NORTHEAST;
+    }
+
+    if (from.x < to.x && from.y > to.y) {
+      return Direction.SOUTHEAST;
+    }
+
+    if (from.x > to.x && from.y < to.y) {
+      return Direction.NORTHWEST;
+    }
+
+    if (from.x > to.x && from.y > to.y) {
+      return Direction.SOUTHWEST;
+    }
+
+    if (from.x < to.x) {
+      return Direction.EAST;
+    }
+
+    if (from.x > to.x) {
+      return Direction.WEST;
+    }
+
+    if (from.y < to.y) {
+      return Direction.NORTH;
+    }
+
+    if (from.y > to.y) {
+      return Direction.SOUTHWEST;
+    }
+
+    return Direction.CENTER;
+  }
 }

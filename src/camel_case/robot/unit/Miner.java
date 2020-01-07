@@ -43,7 +43,7 @@ public class Miner extends Unit {
       return;
     }
 
-    if (tryRefine(rc.getLocation().directionTo(hq))) {
+    if (tryRefine(directionTowards(rc.getLocation(), hq))) {
       return;
     }
 

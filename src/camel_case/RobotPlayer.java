@@ -10,52 +10,59 @@ import camel_case.robot.unit.Miner;
 
 @SuppressWarnings("unused")
 public class RobotPlayer {
-  @SuppressWarnings("unused")
   public static void run(RobotController rc) {
-    Robot robot;
+    Robot robot = createRobot(rc);
 
-    switch (rc.getType()) {
-      case MINER:
-        robot = new Miner(rc);
-        break;
-      case LANDSCAPER:
-        robot = new Landscaper(rc);
-        break;
-      case DELIVERY_DRONE:
-        robot = new DeliveryDrone(rc);
-        break;
-      case HQ:
-        robot = new HQ(rc);
-        break;
-      case REFINERY:
-        robot = new Refinery(rc);
-        break;
-      case VAPORATOR:
-        robot = new Vaporator(rc);
-        break;
-      case DESIGN_SCHOOL:
-        robot = new DesignSchool(rc);
-        break;
-      case FULFILLMENT_CENTER:
-        robot = new FulfillmentCenter(rc);
-        break;
-      case NET_GUN:
-        robot = new NetGun(rc);
-        break;
-      default:
-        System.out.println("Unknown robot type '" + rc.getType() + "'");
-        return;
+    if (robot == null) {
+      return;
     }
 
     //noinspection InfiniteLoopStatement
     while (true) {
       try {
-        robot.run();
+        if (rc.isReady()) {
+          robot.run();
+          logBytecodeUsage(rc);
+        }
+
         Clock.yield();
       } catch (Exception e) {
         System.out.println("Exception in robot #" + rc.getID() + " (" + rc.getType() + ")");
         e.printStackTrace();
       }
     }
+  }
+
+  private static Robot createRobot(RobotController rc) {
+    switch (rc.getType()) {
+      case MINER:
+        return new Miner(rc);
+      case LANDSCAPER:
+        return new Landscaper(rc);
+      case DELIVERY_DRONE:
+        return new DeliveryDrone(rc);
+      case HQ:
+        return new HQ(rc);
+      case REFINERY:
+        return new Refinery(rc);
+      case VAPORATOR:
+        return new Vaporator(rc);
+      case DESIGN_SCHOOL:
+        return new DesignSchool(rc);
+      case FULFILLMENT_CENTER:
+        return new FulfillmentCenter(rc);
+      case NET_GUN:
+        return new NetGun(rc);
+      default:
+        System.out.println("Unknown robot type '" + rc.getType() + "'");
+        return null;
+    }
+  }
+
+  private static void logBytecodeUsage(RobotController rc) {
+    int used = Clock.getBytecodeNum();
+    int total = rc.getType().bytecodeLimit;
+    int percentage = (int) Math.round((double) used / (double) total * 100.0);
+    System.out.println(used + "/" + total + " (" + percentage + "%)");
   }
 }

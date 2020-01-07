@@ -1,8 +1,6 @@
 package camel_case.robot.building;
 
-import battlecode.common.GameActionException;
-import battlecode.common.RobotController;
-import battlecode.common.RobotType;
+import battlecode.common.*;
 
 public class HQ extends Building {
   public HQ(RobotController rc) {
@@ -11,6 +9,13 @@ public class HQ extends Building {
 
   @Override
   public void run() throws GameActionException {
-    // TODO: Implement
+    RobotInfo[] nearbyEnemies =
+        rc.senseNearbyRobots(GameConstants.NET_GUN_SHOOT_RADIUS_SQUARED, enemyTeam);
+
+    for (RobotInfo robotInfo : nearbyEnemies) {
+      if (robotInfo.type == RobotType.DELIVERY_DRONE) {
+        rc.shootUnit(robotInfo.getID());
+      }
+    }
   }
 }

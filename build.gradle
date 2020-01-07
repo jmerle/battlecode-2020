@@ -2,9 +2,6 @@ plugins {
     id "java"
 }
 
-group "com.jaspervanmerle.battlecode2020"
-version "1.0.0"
-
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
@@ -12,6 +9,11 @@ sourceSets {
     main {
         java.srcDirs = ["src"]
         java.outputDir = file("$buildDir/classes")
+    }
+
+    test {
+        java.srcDirs = ["test"]
+        java.outputDir = file("$buildDir/tests")
     }
 }
 

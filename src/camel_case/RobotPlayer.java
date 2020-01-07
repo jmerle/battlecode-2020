@@ -1,4 +1,4 @@
-package com.jaspervanmerle.battlecode2020;
+package camel_case;
 
 import battlecode.common.Clock;
 import battlecode.common.RobotController;

@@ -9,13 +9,32 @@ public class HQ extends Building {
 
   @Override
   public void run() throws GameActionException {
-    RobotInfo[] nearbyEnemies =
-        rc.senseNearbyRobots(GameConstants.NET_GUN_SHOOT_RADIUS_SQUARED, enemyTeam);
+    // TODO: Implement smart base building logic
+    // TODO: Periodically send HQ location and base building data to other robots
 
-    for (RobotInfo robotInfo : nearbyEnemies) {
-      if (robotInfo.type == RobotType.DELIVERY_DRONE) {
-        rc.shootUnit(robotInfo.getID());
+    int sensorRadius = (int) Math.ceil(Math.sqrt(me.sensorRadiusSquared));
+    MapLocation myLocation = rc.getLocation();
+
+    for (int y = -sensorRadius; y < sensorRadius; y++) {
+      for (int x = -sensorRadius; x < sensorRadius; x++) {
+        /*MapLocation location = new MapLocation(myLocation.x + x, myLocation.y + y);
+
+        if (rc.canSenseLocation(location)) {
+          rc.setIndicatorDot(location, 255, 0, 0);
+        }*/
       }
     }
+
+    if (!rc.isReady()) return;
+
+    // TODO: Implement intelligent spawning
+
+    for (Direction direction : adjacentDirections) {
+      if (tryBuildRobot(RobotType.MINER, direction)) {
+        return;
+      }
+    }
+
+    tryShootEnemyDrone();
   }
 }

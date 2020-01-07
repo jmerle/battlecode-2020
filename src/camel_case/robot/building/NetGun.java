@@ -11,6 +11,8 @@ public class NetGun extends Building {
 
   @Override
   public void run() throws GameActionException {
-    // TODO: Implement
+    if (!rc.isReady()) return;
+
+    tryShootEnemyDrone();
   }
 }

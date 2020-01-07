@@ -11,6 +11,12 @@ public class Landscaper extends Unit {
 
   @Override
   public void run() throws GameActionException {
-    // TODO: Implement
+    // TODO: Implement non-action logic
+
+    if (!rc.isReady()) return;
+
+    // TODO: Implement action logic
+
+    tryMoveRandom();
   }
 }

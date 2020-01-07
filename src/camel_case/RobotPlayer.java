@@ -20,11 +20,8 @@ public class RobotPlayer {
     //noinspection InfiniteLoopStatement
     while (true) {
       try {
-        if (rc.isReady()) {
-          robot.run();
-          logBytecodeUsage(rc);
-        }
-
+        robot.run();
+        logBytecodeUsage(rc);
         Clock.yield();
       } catch (Exception e) {
         System.out.println("Exception in robot #" + rc.getID() + " (" + rc.getType() + ")");

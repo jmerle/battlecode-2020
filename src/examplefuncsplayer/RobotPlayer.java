@@ -2,12 +2,18 @@ package examplefuncsplayer;
 
 import battlecode.common.*;
 
-@SuppressWarnings("ALL")
 public strictfp class RobotPlayer {
   static RobotController rc;
 
   static Direction[] directions = {
-    Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST
+    Direction.NORTH,
+    Direction.NORTHEAST,
+    Direction.EAST,
+    Direction.SOUTHEAST,
+    Direction.SOUTH,
+    Direction.SOUTHWEST,
+    Direction.WEST,
+    Direction.NORTHWEST
   };
 
   static RobotType[] spawnedByMiner = {
@@ -226,8 +232,8 @@ public strictfp class RobotPlayer {
 
   static void tryBlockchain() throws GameActionException {
     if (turnCount < 3) {
-      int[] message = new int[10];
-      for (int i = 0; i < 10; i++) {
+      int[] message = new int[7];
+      for (int i = 0; i < 7; i++) {
         message[i] = 123;
       }
       if (rc.canSubmitTransaction(message, 10)) rc.submitTransaction(message, 10);

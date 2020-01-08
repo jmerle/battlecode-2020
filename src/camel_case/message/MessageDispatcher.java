@@ -106,11 +106,13 @@ public class MessageDispatcher {
   }
 
   private int createHash(int round) {
-    return round;
+    // TODO: Add some code in build.gradle to generate this automatically on every build
+    return ((round * 321) - 523) * 21;
   }
 
   private boolean checkHash(int hash, int round) {
-    return hash == round;
+    double hashRound = (((double) hash / 21) + 523) / 321;
+    return hashRound == round;
   }
 
   private int getPrice() {

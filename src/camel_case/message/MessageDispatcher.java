@@ -106,7 +106,6 @@ public class MessageDispatcher {
   }
 
   private int createHash(int round) {
-    // TODO: Add some code in build.gradle to generate this automatically on every build
     return ((round * 321) - 523) * 21;
   }
 

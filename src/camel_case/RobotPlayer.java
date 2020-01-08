@@ -23,12 +23,13 @@ public class RobotPlayer {
         robot.getMessageDispatcher().handleIncomingMessages();
         robot.run();
         robot.getMessageDispatcher().sendBatch();
-        logBytecodeUsage(rc);
-        Clock.yield();
       } catch (Exception e) {
         System.out.println("Exception in robot #" + rc.getID() + " (" + rc.getType() + ")");
         e.printStackTrace();
       }
+
+      logBytecodeUsage(rc);
+      Clock.yield();
     }
   }
 

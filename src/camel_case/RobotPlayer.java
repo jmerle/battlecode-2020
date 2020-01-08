@@ -61,7 +61,6 @@ public class RobotPlayer {
   private static void logBytecodeUsage(RobotController rc) {
     int used = Clock.getBytecodeNum();
     int total = rc.getType().bytecodeLimit;
-    int percentage = (int) Math.round((double) used / (double) total * 100.0);
-    System.out.println(used + "/" + total + " (" + percentage + "%)");
+    System.out.println(used + "/" + total);
   }
 }

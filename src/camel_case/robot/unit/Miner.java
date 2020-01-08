@@ -2,6 +2,7 @@ package camel_case.robot.unit;
 
 import battlecode.common.*;
 import camel_case.message.impl.SoupFoundMessage;
+import camel_case.message.impl.SoupGoneMessage;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -42,6 +43,11 @@ public class Miner extends Unit {
     soupLocations.add(message.getLocation());
   }
 
+  @Override
+  public void onMessage(SoupGoneMessage message) {
+    soupLocations.remove(message.getLocation());
+  }
+
   private void senseHQ() {
     RobotInfo[] nearbyRobots = rc.senseNearbyRobots(-1, myTeam);
 
@@ -69,8 +75,12 @@ public class Miner extends Unit {
   private void findAndMineSoup() throws GameActionException {
     for (Direction direction : adjacentDirections) {
       if (tryMine(direction)) {
+        if (rc.senseSoup(rc.adjacentLocation(direction)) == 0) {
+          dispatchMessage(new SoupGoneMessage(rc.getLocation()));
+        }
+
         if (soupFoundMessageCooldown == 0) {
-          sendMessage(new SoupFoundMessage(rc.getLocation()));
+          dispatchMessage(new SoupFoundMessage(rc.getLocation()));
           soupFoundMessageCooldown = 100;
         }
         return;

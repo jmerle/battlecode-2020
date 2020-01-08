@@ -4,6 +4,7 @@ import battlecode.common.*;
 import camel_case.message.Message;
 import camel_case.message.MessageDispatcher;
 import camel_case.message.impl.SoupFoundMessage;
+import camel_case.message.impl.SoupGoneMessage;
 
 import java.util.Random;
 
@@ -42,6 +43,10 @@ public abstract class Robot {
   public abstract void run() throws GameActionException;
 
   public void onMessage(SoupFoundMessage message) {
+    // Let implementations override this
+  }
+
+  public void onMessage(SoupGoneMessage message) {
     // Let implementations override this
   }
 
@@ -85,7 +90,7 @@ public abstract class Robot {
     return Direction.CENTER;
   }
 
-  public void sendMessage(Message message) {
+  public void dispatchMessage(Message message) {
     messageDispatcher.addToBatch(message);
   }
 

@@ -5,6 +5,7 @@ import battlecode.common.GameConstants;
 import battlecode.common.RobotController;
 import battlecode.common.Transaction;
 import camel_case.message.impl.SoupFoundMessage;
+import camel_case.message.impl.SoupGoneMessage;
 import camel_case.robot.Robot;
 
 import java.util.ArrayDeque;
@@ -89,9 +90,14 @@ public class MessageDispatcher {
         for (int dataIndex = 1; dataIndex < dataLength && data[dataIndex] != 0; dataIndex++) {
           switch (messageTypes[data[dataIndex] - 1]) {
             case SOUP_FOUND:
-              SoupFoundMessage message = new SoupFoundMessage(data, dataIndex + 1);
-              dataIndex += message.getSize();
-              robot.onMessage(message);
+              SoupFoundMessage soupFoundMessage = new SoupFoundMessage(data, dataIndex + 1);
+              dataIndex += soupFoundMessage.getSize();
+              robot.onMessage(soupFoundMessage);
+              break;
+            case SOUP_GONE:
+              SoupGoneMessage soupGoneMessage = new SoupGoneMessage(data, dataIndex + 1);
+              dataIndex += soupGoneMessage.getSize();
+              robot.onMessage(soupGoneMessage);
               break;
           }
         }

@@ -228,5 +228,17 @@ task listMaps {
     }
 }
 
+task createSubmission(type: Zip) {
+    group "battlecode"
+    description "Creates a submission zip."
+
+    dependsOn "build"
+
+    from new File(project.projectDir, "src/camel_case").getAbsolutePath()
+    include "**/*"
+    archiveName "${new Date().format("yyyy-MM-dd_kk-mm-ss")}.zip"
+    destinationDir file("${project.buildDir}/submissions")
+}
+
 build.group = "battlecode"
 build.dependsOn("unpackClient")

@@ -83,6 +83,7 @@ public class Miner extends Unit {
           dispatchMessage(new SoupFoundMessage(rc.getLocation()));
           soupFoundMessageCooldown = 100;
         }
+
         return;
       }
     }

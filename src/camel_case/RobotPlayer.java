@@ -20,7 +20,9 @@ public class RobotPlayer {
     //noinspection InfiniteLoopStatement
     while (true) {
       try {
+        robot.getMessageDispatcher().handleIncomingMessages();
         robot.run();
+        robot.getMessageDispatcher().sendBatch();
         logBytecodeUsage(rc);
         Clock.yield();
       } catch (Exception e) {

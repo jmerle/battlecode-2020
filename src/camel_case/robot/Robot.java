@@ -1,6 +1,9 @@
 package camel_case.robot;
 
 import battlecode.common.*;
+import camel_case.message.Message;
+import camel_case.message.MessageDispatcher;
+import camel_case.message.impl.SoupFoundMessage;
 
 import java.util.Random;
 
@@ -8,6 +11,7 @@ public abstract class Robot {
   protected RobotController rc;
 
   protected RobotType me;
+  protected MessageDispatcher messageDispatcher;
 
   protected Team myTeam;
   protected Team enemyTeam;
@@ -29,12 +33,17 @@ public abstract class Robot {
     this.rc = rc;
 
     me = type;
+    messageDispatcher = new MessageDispatcher(rc, this);
 
     myTeam = rc.getTeam();
     enemyTeam = myTeam.opponent();
   }
 
   public abstract void run() throws GameActionException;
+
+  public void onMessage(SoupFoundMessage message) {
+    // Let implementations override this
+  }
 
   protected Direction randomAdjacentDirection() {
     return adjacentDirections[random.nextInt(adjacentDirections.length)];
@@ -74,5 +83,13 @@ public abstract class Robot {
     }
 
     return Direction.CENTER;
+  }
+
+  public void sendMessage(Message message) {
+    messageDispatcher.addToBatch(message);
+  }
+
+  public MessageDispatcher getMessageDispatcher() {
+    return messageDispatcher;
   }
 }

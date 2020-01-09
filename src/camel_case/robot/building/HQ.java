@@ -6,6 +6,8 @@ import battlecode.common.RobotController;
 import battlecode.common.RobotType;
 
 public class HQ extends Building {
+  private int minersSpawned = 0;
+
   public HQ(RobotController rc) {
     super(rc, RobotType.HQ);
   }
@@ -17,11 +19,10 @@ public class HQ extends Building {
 
     if (!rc.isReady()) return;
 
-    // TODO: Implement intelligent spawning
-
-    if (rc.getRoundNum() % 50 == 0) {
+    if (minersSpawned < 10) {
       for (Direction direction : adjacentDirections) {
         if (tryBuildRobot(RobotType.MINER, direction)) {
+          minersSpawned++;
           return;
         }
       }

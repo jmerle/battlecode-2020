@@ -106,11 +106,13 @@ public class MessageDispatcher {
   }
 
   private int createHash(int round) {
-    return ((round * 321) - 523) * 21;
+    int team = rc.getTeam().ordinal() + 1;
+    return (((round * team) * 321) - 523) * 21;
   }
 
   private boolean checkHash(int hash, int round) {
-    double hashRound = (((double) hash / 21) + 523) / 321;
+    int team = rc.getTeam().ordinal() + 1;
+    double hashRound = ((((double) hash / 21) + 523) / 321) / team;
     return hashRound == round;
   }
 

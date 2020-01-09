@@ -34,7 +34,7 @@ def replayPath = "replays/${project.property("teamA")}-vs-${project.property("te
 def os = System.getProperty("os.name").toLowerCase()
 def clientName = "battlecode-client-${os.startsWith("windows") ? "win" : os.startsWith("mac") ? "mac" : "linux"}"
 
-def battlecodeVersion = new File(project.projectDir, "version.txt").text.trim()
+def battlecodeVersion = file("version.txt").text.trim()
 def battlecodeVersionUrl = "https://2020.battlecode.org/version.txt"
 
 repositories {
@@ -80,7 +80,7 @@ task update {
             return
         }
 
-        new File(project.projectDir, "version.txt").text = latestVersion + "\n"
+        file("version.txt").text = latestVersion + "\n"
 
         println("Updated Battlecode from $currentVersion to $latestVersion, please reload the Gradle project")
     }
@@ -184,7 +184,7 @@ task listPlayers {
 
         sourceSets.main.allSource.each {
             if (it.name.equals("RobotPlayer.java")) {
-                def base = new File(project.projectDir, "src").toURI()
+                def base = file("src").toURI()
                 def full = it.toURI()
                 def path = base.relativize(full).toString()
                 players.push(path.substring(0, path.lastIndexOf("/")).replaceAll("/", "."))
@@ -210,7 +210,7 @@ task listMaps {
         sourceSets.main.compileClasspath.each {
             if (it.toString().contains("battlecode-2020")) {
                 def fileCollection = zipTree(it)
-                fileCollection += fileTree(new File(project.projectDir, "maps"))
+                fileCollection += fileTree(file("maps"))
                 fileCollection.each {
                     if (it.name.endsWith(".map20")) {
                         maps.push(it.name.substring(0, it.name.indexOf(".map20")))
@@ -234,7 +234,7 @@ task createSubmission(type: Zip) {
 
     dependsOn "build"
 
-    from new File(project.projectDir, "src/camel_case").getAbsolutePath()
+    from file("src/camel_case").getAbsolutePath()
     include "**/*"
     archiveName "${new Date().format("yyyy-MM-dd_kk-mm-ss")}.zip"
     destinationDir file("${project.buildDir}/submissions")

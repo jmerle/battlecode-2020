@@ -28,7 +28,7 @@ configurations {
 }
 
 static def get(String url) {
-    return new URL(url).text.trim() + "\n"
+    return new URL(url).text.trim()
 }
 
 static def updateVariable(File file, String varName, Object newValue) {
@@ -58,7 +58,7 @@ repositories {
         url "https://maven.pkg.github.com/battlecode/battlecode20"
         credentials {
             username = "battlecodedownloadpackage"
-            password = get("https://2020.battlecode.org/access.txt").trim()
+            password = get("https://2020.battlecode.org/access.txt")
         }
     }
 }
@@ -75,17 +75,17 @@ task checkForUpdates {
 
     doLast {
         def currentVersion = battlecodeVersion
-        def latestVersion = get(battlecodeVersionUrl).trim()
+        def latestVersion = get(battlecodeVersionUrl)
 
         if (currentVersion != latestVersion) {
             print("\n\n\nBATTLECODE UPDATE AVAILABLE ($currentVersion -> $latestVersion)\n\n\n")
         }
 
-        if (file(examplefuncsplayerPath).text != get(examplefuncsplayerUrl)) {
+        if (file(examplefuncsplayerPath).text.trim() != get(examplefuncsplayerUrl)) {
             print("\n\n\nEXAMPLEFUNCSPLAYER UPDATE AVAILABLE\n\n\n")
         }
 
-        if (file(lectureplayerPath).text != get(lectureplayerUrl)) {
+        if (file(lectureplayerPath).text.trim() != get(lectureplayerUrl)) {
             print("\n\n\nLECTUREPLAYER UPDATE AVAILABLE\n\n\n")
         }
     }
@@ -97,7 +97,7 @@ task update {
 
     doLast {
         def currentVersion = battlecodeVersion
-        def latestVersion = get(battlecodeVersionUrl).trim()
+        def latestVersion = get(battlecodeVersionUrl)
 
         if (currentVersion == latestVersion) {
             println("Already using the latest Battlecode version ($currentVersion)")
@@ -106,10 +106,10 @@ task update {
             println("Updated Battlecode from $currentVersion to $latestVersion, please reload the Gradle project")
         }
 
-        file(examplefuncsplayerPath).text = get(examplefuncsplayerUrl)
+        file(examplefuncsplayerPath).text = get(examplefuncsplayerUrl) + "\n"
         println("Updated examplefuncsplayer to latest version")
 
-        file(lectureplayerPath).text = get(lectureplayerUrl)
+        file(lectureplayerPath).text = get(lectureplayerUrl) + "\n"
         println("Updated lectureplayer to latest version")
     }
 }

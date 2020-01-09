@@ -4,6 +4,7 @@ import battlecode.common.GameActionException;
 import battlecode.common.GameConstants;
 import battlecode.common.RobotController;
 import battlecode.common.Transaction;
+import camel_case.GeneratedData;
 import camel_case.message.impl.SoupFoundMessage;
 import camel_case.message.impl.SoupGoneMessage;
 import camel_case.robot.Robot;
@@ -107,12 +108,20 @@ public class MessageDispatcher {
 
   private int createHash(int round) {
     int team = rc.getTeam().ordinal() + 1;
-    return (((round * team) * 321) - 523) * 21;
+    int key1 = GeneratedData.MESSAGE_HASH_KEY_1;
+    int key2 = GeneratedData.MESSAGE_HASH_KEY_2;
+    int key3 = GeneratedData.MESSAGE_HASH_KEY_3;
+
+    return (((round * team) * key1) - key2) * key3;
   }
 
   private boolean checkHash(int hash, int round) {
     int team = rc.getTeam().ordinal() + 1;
-    double hashRound = ((((double) hash / 21) + 523) / 321) / team;
+    double key1 = GeneratedData.MESSAGE_HASH_KEY_1;
+    double key2 = GeneratedData.MESSAGE_HASH_KEY_2;
+    double key3 = GeneratedData.MESSAGE_HASH_KEY_3;
+
+    double hashRound = ((((double) hash / key3) + key2) / key1) / team;
     return hashRound == round;
   }
 

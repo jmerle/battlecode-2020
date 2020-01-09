@@ -1,3 +1,5 @@
+import java.util.concurrent.ThreadLocalRandom
+
 plugins {
     id "java"
 }
@@ -240,5 +242,35 @@ task createSubmission(type: Zip) {
     destinationDir file("${project.buildDir}/submissions")
 }
 
-build.group = "battlecode"
-build.dependsOn("unpackClient")
+static def updateVariable(File file, String varName, Object newValue) {
+    file.text = file.text.replaceFirst("($varName = ([^;]+);)", "$varName = $newValue;")
+}
+
+task preprocess {
+    group "battlecode"
+    description "Write generated data to Java files."
+
+    outputs.upToDateWhen { false }
+
+    doLast {
+        def file = file("src/camel_case/GeneratedData.java")
+
+        def rnd = ThreadLocalRandom.current()
+
+        for (int i = 1; i <= 3; i++) {
+            int number = 0
+            while (number == 0) {
+                number = rnd.nextInt(-999, 1000)
+            }
+
+            updateVariable(file, "MESSAGE_HASH_KEY_$i", number)
+        }
+    }
+}
+
+build {
+    group "battlecode"
+
+    dependsOn "unpackClient"
+    dependsOn "preprocess"
+}

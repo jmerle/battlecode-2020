@@ -253,7 +253,7 @@ static def updateVariable(File file, String varName, Object newValue) {
     file.text = file.text.replaceFirst("($varName = ([^;]+);)", "$varName = $newValue;")
 }
 
-task preprocess {
+task generateData {
     group "battlecode"
     description "Write generated data to Java files."
 
@@ -279,5 +279,5 @@ build {
     group "battlecode"
 
     dependsOn "unpackClient"
-    dependsOn "preprocess"
+    dependsOn "generateData"
 }

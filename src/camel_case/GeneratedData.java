@@ -5,7 +5,7 @@ package camel_case;
  * manually is useless, they are automatically replaced on every build.
  */
 public class GeneratedData {
-  public static final int MESSAGE_HASH_SECRET_1 = -34;
-  public static final int MESSAGE_HASH_SECRET_2 = 174;
-  public static final int MESSAGE_HASH_SECRET_3 = -46;
+  public static final int MESSAGE_HASH_SECRET_1 = -39;
+  public static final int MESSAGE_HASH_SECRET_2 = 84;
+  public static final int MESSAGE_HASH_SECRET_3 = 219;
 }

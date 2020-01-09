@@ -5,8 +5,7 @@ import camel_case.message.Message;
 import camel_case.message.MessageDispatcher;
 import camel_case.message.impl.SoupFoundMessage;
 import camel_case.message.impl.SoupGoneMessage;
-
-import java.util.Random;
+import camel_case.util.BetterRandom;
 
 public abstract class Robot {
   protected RobotController rc;
@@ -27,8 +26,6 @@ public abstract class Robot {
     Direction.WEST,
     Direction.NORTHWEST
   };
-
-  protected Random random = new Random();
 
   public Robot(RobotController rc, RobotType type) {
     this.rc = rc;
@@ -51,7 +48,7 @@ public abstract class Robot {
   }
 
   protected Direction randomAdjacentDirection() {
-    return adjacentDirections[random.nextInt(adjacentDirections.length)];
+    return adjacentDirections[BetterRandom.nextInt(adjacentDirections.length)];
   }
 
   protected Direction directionTowards(MapLocation from, MapLocation to) {

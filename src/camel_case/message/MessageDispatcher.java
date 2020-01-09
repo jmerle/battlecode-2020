@@ -127,7 +127,7 @@ public class MessageDispatcher {
 
   private int getPrice() {
     if (messageCount == 0) {
-      return 1;
+      return 0;
     }
 
     return (int) (Math.round((double) totalCost / (double) messageCount) + 1);

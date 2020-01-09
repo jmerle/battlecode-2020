@@ -263,7 +263,7 @@ task preprocess {
                 number = rnd.nextInt(-250, 251)
             }
 
-            updateVariable(file, "MESSAGE_HASH_KEY_$i", number)
+            updateVariable(file, "MESSAGE_HASH_SECRET_$i", number)
         }
     }
 }

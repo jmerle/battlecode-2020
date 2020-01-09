@@ -108,20 +108,20 @@ public class MessageDispatcher {
 
   private int createHash(int round) {
     int team = rc.getTeam().ordinal() + 1;
-    int key1 = GeneratedData.MESSAGE_HASH_KEY_1;
-    int key2 = GeneratedData.MESSAGE_HASH_KEY_2;
-    int key3 = GeneratedData.MESSAGE_HASH_KEY_3;
+    int secret1 = GeneratedData.MESSAGE_HASH_SECRET_1;
+    int secret2 = GeneratedData.MESSAGE_HASH_SECRET_2;
+    int secret3 = GeneratedData.MESSAGE_HASH_SECRET_3;
 
-    return (((round * team) * key1) - key2) * key3;
+    return (((round * team) * secret1) - secret2) * secret3;
   }
 
   private boolean checkHash(int hash, int round) {
     int team = rc.getTeam().ordinal() + 1;
-    double key1 = GeneratedData.MESSAGE_HASH_KEY_1;
-    double key2 = GeneratedData.MESSAGE_HASH_KEY_2;
-    double key3 = GeneratedData.MESSAGE_HASH_KEY_3;
+    double secret1 = GeneratedData.MESSAGE_HASH_SECRET_1;
+    double secret2 = GeneratedData.MESSAGE_HASH_SECRET_2;
+    double secret3 = GeneratedData.MESSAGE_HASH_SECRET_3;
 
-    double hashRound = ((((double) hash / key3) + key2) / key1) / team;
+    double hashRound = ((((double) hash / secret3) + secret2) / secret1) / team;
     return hashRound == round;
   }
 

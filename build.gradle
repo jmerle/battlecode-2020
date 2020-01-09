@@ -27,6 +27,14 @@ configurations {
     }
 }
 
+static def get(String url) {
+    return new URL(url).text.trim() + "\n"
+}
+
+static def updateVariable(File file, String varName, Object newValue) {
+    file.text = file.text.replaceFirst("($varName = ([^;]+);)", "$varName = $newValue;")
+}
+
 if (!project.hasProperty("classLocation")) {
     ext.classLocation = sourceSets.main.output.classesDirs.getAsPath()
 }
@@ -39,12 +47,18 @@ def clientName = "battlecode-client-${os.startsWith("windows") ? "win" : os.star
 def battlecodeVersion = file("version.txt").text.trim()
 def battlecodeVersionUrl = "https://2020.battlecode.org/version.txt"
 
+def examplefuncsplayerUrl = "https://raw.githubusercontent.com/battlecode/battlecode20-scaffold/master/src/examplefuncsplayer/RobotPlayer.java"
+def examplefuncsplayerPath = "src/examplefuncsplayer/RobotPlayer.java"
+
+def lectureplayerUrl = "https://raw.githubusercontent.com/battlecode/lectureplayer/master/RobotPlayer.java"
+def lectureplayerPath = "src/lectureplayer/RobotPlayer.java"
+
 repositories {
     maven {
         url "https://maven.pkg.github.com/battlecode/battlecode20"
         credentials {
             username = "battlecodedownloadpackage"
-            password = new URL("https://2020.battlecode.org/access.txt").text.trim()
+            password = get("https://2020.battlecode.org/access.txt").trim()
         }
     }
 }
@@ -61,10 +75,18 @@ task checkForUpdates {
 
     doLast {
         def currentVersion = battlecodeVersion
-        def latestVersion = new URL(battlecodeVersionUrl).text.trim()
+        def latestVersion = get(battlecodeVersionUrl).trim()
 
         if (currentVersion != latestVersion) {
             print("\n\n\nBATTLECODE UPDATE AVAILABLE ($currentVersion -> $latestVersion)\n\n\n")
+        }
+
+        if (file(examplefuncsplayerPath).text != get(examplefuncsplayerUrl)) {
+            print("\n\n\nEXAMPLEFUNCSPLAYER UPDATE AVAILABLE\n\n\n")
+        }
+
+        if (file(lectureplayerPath).text != get(lectureplayerUrl)) {
+            print("\n\n\nLECTUREPLAYER UPDATE AVAILABLE\n\n\n")
         }
     }
 }
@@ -74,24 +96,21 @@ task update {
     description "Updates the Battlecode version and the default players."
 
     doLast {
-        def examplefuncsplayerUrl = "https://raw.githubusercontent.com/battlecode/battlecode20-scaffold/master/src/examplefuncsplayer/RobotPlayer.java"
-        file("src/examplefuncsplayer/RobotPlayer.java").text = new URL(examplefuncsplayerUrl).text.trim() + "\n"
-        println("Updated examplefuncsplayer to latest version")
-
-        def lectureplayerUrl = "https://raw.githubusercontent.com/battlecode/lectureplayer/master/RobotPlayer.java"
-        file("src/lectureplayer/RobotPlayer.java").text = new URL(lectureplayerUrl).text.trim() + "\n"
-        println("Updated lectureplayer to latest version")
-
         def currentVersion = battlecodeVersion
-        def latestVersion = new URL(battlecodeVersionUrl).text.trim()
+        def latestVersion = get(battlecodeVersionUrl).trim()
 
         if (currentVersion == latestVersion) {
             println("Already using the latest Battlecode version ($currentVersion)")
-            return
+        } else {
+            file("version.txt").text = latestVersion + "\n"
+            println("Updated Battlecode from $currentVersion to $latestVersion, please reload the Gradle project")
         }
 
-        file("version.txt").text = latestVersion + "\n"
-        println("Updated Battlecode from $currentVersion to $latestVersion, please reload the Gradle project")
+        file(examplefuncsplayerPath).text = get(examplefuncsplayerUrl)
+        println("Updated examplefuncsplayer to latest version")
+
+        file(lectureplayerPath).text = get(lectureplayerUrl)
+        println("Updated lectureplayer to latest version")
     }
 }
 
@@ -247,10 +266,6 @@ task createSubmission(type: Zip) {
     include "**/*"
     archiveName "${new Date().format("yyyy-MM-dd_kk-mm-ss")}.zip"
     destinationDir file("${project.buildDir}/submissions")
-}
-
-static def updateVariable(File file, String varName, Object newValue) {
-    file.text = file.text.replaceFirst("($varName = ([^;]+);)", "$varName = $newValue;")
 }
 
 task generateData {

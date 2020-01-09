@@ -71,19 +71,26 @@ task checkForUpdates {
 
 task update {
     group "battlecode"
-    description "Updates the Battlecode version."
+    description "Updates the Battlecode version and the default players."
 
     doLast {
+        def examplefuncsplayerUrl = "https://raw.githubusercontent.com/battlecode/battlecode20-scaffold/master/src/examplefuncsplayer/RobotPlayer.java"
+        file("src/examplefuncsplayer/RobotPlayer.java").text = new URL(examplefuncsplayerUrl).text.trim() + "\n"
+        println("Updated examplefuncsplayer to latest version")
+
+        def lectureplayerUrl = "https://raw.githubusercontent.com/battlecode/lectureplayer/master/RobotPlayer.java"
+        file("src/lectureplayer/RobotPlayer.java").text = new URL(lectureplayerUrl).text.trim() + "\n"
+        println("Updated lectureplayer to latest version")
+
         def currentVersion = battlecodeVersion
         def latestVersion = new URL(battlecodeVersionUrl).text.trim()
 
         if (currentVersion == latestVersion) {
-            println("Already using the latest version ($currentVersion)")
+            println("Already using the latest Battlecode version ($currentVersion)")
             return
         }
 
         file("version.txt").text = latestVersion + "\n"
-
         println("Updated Battlecode from $currentVersion to $latestVersion, please reload the Gradle project")
     }
 }

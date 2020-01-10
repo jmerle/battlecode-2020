@@ -5,8 +5,6 @@ import battlecode.common.GameConstants;
 import battlecode.common.RobotController;
 import battlecode.common.Transaction;
 import camel_case.GeneratedData;
-import camel_case.message.impl.HQLocationMessage;
-import camel_case.message.impl.HQLocationRequestMessage;
 import camel_case.message.impl.SoupFoundMessage;
 import camel_case.message.impl.SoupGoneMessage;
 import camel_case.robot.Robot;
@@ -102,15 +100,6 @@ public class MessageDispatcher {
               dataIndex += soupGoneMessage.getSize();
               robot.onMessage(soupGoneMessage);
               break;
-            case HQ_LOCATION_REQUEST:
-              HQLocationRequestMessage hqLocationRequestMessage = new HQLocationRequestMessage();
-              dataIndex += hqLocationRequestMessage.getSize();
-              robot.onMessage(hqLocationRequestMessage);
-              break;
-            case HQ_LOCATION:
-              HQLocationMessage hqLocationMessage = new HQLocationMessage(data, dataIndex + 1);
-              dataIndex += hqLocationMessage.getSize();
-              robot.onMessage(hqLocationMessage);
           }
         }
       }

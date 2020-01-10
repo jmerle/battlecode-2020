@@ -1,14 +1,10 @@
 package camel_case.robot.unit;
 
 import battlecode.common.*;
-import camel_case.message.impl.HQLocationMessage;
-import camel_case.message.impl.HQLocationRequestMessage;
 
 public class Landscaper extends Unit {
-  private MapLocation hq = null;
-  private MapLocation campSpot = null;
-
-  private boolean hqLocationRequested = false;
+  private MapLocation hq;
+  private MapLocation campSpot;
 
   public Landscaper(RobotController rc) {
     super(rc, RobotType.LANDSCAPER);
@@ -20,24 +16,12 @@ public class Landscaper extends Unit {
       senseHQ();
     }
 
-    if (hq == null) {
-      if (!hqLocationRequested) {
-        dispatchMessage(new HQLocationRequestMessage());
-      }
-
-      return;
-    }
-
     if (campSpot == null) {
-      chooseCampSpot();
+      // TODO: Receive camp spot from HQ
+      return;
     }
 
     if (!rc.isReady()) return;
-
-    if (campSpot == null) {
-      tryMoveTo(hq);
-      return;
-    }
 
     if (!campSpot.equals(rc.getLocation())) {
       tryMoveTo(campSpot);
@@ -58,11 +42,6 @@ public class Landscaper extends Unit {
     }
   }
 
-  @Override
-  public void onMessage(HQLocationMessage message) {
-    hq = message.getLocation();
-  }
-
   private void senseHQ() {
     RobotInfo[] nearbyRobots = rc.senseNearbyRobots(-1, myTeam);
 
@@ -70,22 +49,6 @@ public class Landscaper extends Unit {
       if (robotInfo.getType() == RobotType.HQ) {
         hq = robotInfo.getLocation();
         return;
-      }
-    }
-  }
-
-  private void chooseCampSpot() throws GameActionException {
-    for (Direction direction : adjacentDirections) {
-      if (!rc.canSenseLocation(hq.add(direction))) {
-        return;
-      }
-    }
-
-    for (Direction direction : adjacentDirections) {
-      MapLocation potentialLocation = hq.add(direction);
-
-      if (rc.senseRobotAtLocation(potentialLocation) == null) {
-        campSpot = potentialLocation;
       }
     }
   }

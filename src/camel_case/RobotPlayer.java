@@ -17,6 +17,8 @@ public class RobotPlayer {
       return;
     }
 
+    int startTurn = rc.getRoundNum();
+
     //noinspection InfiniteLoopStatement
     while (true) {
       try {
@@ -28,8 +30,15 @@ public class RobotPlayer {
         e.printStackTrace();
       }
 
-      notifyHighBytecodeUsage(rc, 90);
+      if (rc.getRoundNum() > startTurn) {
+        int limit = rc.getType().bytecodeLimit;
+        System.out.println("Used too much bytecode, the limit is " + limit + "!");
+      } else {
+        notifyHighBytecodeUsage(rc, 90);
+      }
+
       Clock.yield();
+      startTurn = rc.getRoundNum();
     }
   }
 

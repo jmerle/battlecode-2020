@@ -18,6 +18,10 @@ public class HQ extends Building {
 
     if (!rc.isReady()) return;
 
+    if (tryShootEnemyDrone()) {
+      return;
+    }
+
     if (minersSpawned < 10) {
       for (Direction direction : adjacentDirections) {
         if (tryBuildRobot(RobotType.MINER, direction)) {
@@ -26,7 +30,5 @@ public class HQ extends Building {
         }
       }
     }
-
-    tryShootEnemyDrone();
   }
 }

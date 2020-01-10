@@ -105,7 +105,7 @@ public class Miner extends Unit {
       return;
     }
 
-    if (tryRefine(directionTowards(rc.getLocation(), hq))) {
+    if (tryRefine(directionTowards(hq))) {
       return;
     }
 

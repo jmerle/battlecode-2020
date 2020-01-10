@@ -3,6 +3,8 @@ package camel_case.robot;
 import battlecode.common.*;
 import camel_case.message.Message;
 import camel_case.message.MessageDispatcher;
+import camel_case.message.impl.HQLocationMessage;
+import camel_case.message.impl.HQLocationRequestMessage;
 import camel_case.message.impl.SoupFoundMessage;
 import camel_case.message.impl.SoupGoneMessage;
 import camel_case.util.BetterRandom;
@@ -18,12 +20,12 @@ public abstract class Robot {
 
   protected Direction[] adjacentDirections = {
     Direction.NORTH,
-    Direction.NORTHEAST,
     Direction.EAST,
-    Direction.SOUTHEAST,
     Direction.SOUTH,
-    Direction.SOUTHWEST,
     Direction.WEST,
+    Direction.NORTHEAST,
+    Direction.SOUTHEAST,
+    Direction.SOUTHWEST,
     Direction.NORTHWEST
   };
 
@@ -44,6 +46,14 @@ public abstract class Robot {
   }
 
   public void onMessage(SoupGoneMessage message) {
+    // Let implementations override this
+  }
+
+  public void onMessage(HQLocationRequestMessage message) {
+    // Let implementations override this
+  }
+
+  public void onMessage(HQLocationMessage message) {
     // Let implementations override this
   }
 
@@ -85,6 +95,10 @@ public abstract class Robot {
     }
 
     return Direction.CENTER;
+  }
+
+  protected Direction directionTowards(MapLocation to) {
+    return directionTowards(rc.getLocation(), to);
   }
 
   public void dispatchMessage(Message message) {

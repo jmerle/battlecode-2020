@@ -1,10 +1,11 @@
 package camel_case.message;
 
 import battlecode.common.GameActionException;
-import battlecode.common.GameConstants;
 import battlecode.common.RobotController;
 import battlecode.common.Transaction;
 import camel_case.GeneratedData;
+import camel_case.message.impl.OrderCompletedMessage;
+import camel_case.message.impl.OrderMessage;
 import camel_case.message.impl.SoupFoundMessage;
 import camel_case.message.impl.SoupGoneMessage;
 import camel_case.robot.Robot;
@@ -44,35 +45,29 @@ public class MessageDispatcher {
     }
 
     int hash = createHash(rc.getRoundNum());
-
-    int[] currentData = new int[GameConstants.MAX_BLOCKCHAIN_TRANSACTION_LENGTH];
-    currentData[0] = hash;
-    int currentIndex = 1;
+    MessageData currentData = new MessageData(hash);
 
     while (!messageQueue.isEmpty()) {
       Message message = messageQueue.poll();
       int messageSize = message.getSize() + 1;
 
-      if (currentIndex + messageSize >= currentData.length) {
-        rc.submitTransaction(currentData, price);
+      if (!currentData.hasSpace(messageSize)) {
+        rc.submitTransaction(currentData.getData(), price);
 
         if (rc.getTeamSoup() < price || messageQueue.isEmpty()) {
-          currentIndex = -1;
+          currentData = null;
           break;
         }
 
-        currentData = new int[GameConstants.MAX_BLOCKCHAIN_TRANSACTION_LENGTH];
-        currentData[0] = hash;
-        currentIndex = 1;
+        currentData = new MessageData(hash);
       }
 
-      currentData[currentIndex] = message.getType().ordinal() + 1;
-      message.write(currentData, currentIndex + 1);
-      currentIndex += messageSize;
+      currentData.writeInt(message.getType().ordinal() + 1);
+      message.write(currentData);
     }
 
-    if (currentIndex != -1) {
-      rc.submitTransaction(currentData, price);
+    if (currentData != null) {
+      rc.submitTransaction(currentData.getData(), price);
     }
   }
 
@@ -84,21 +79,28 @@ public class MessageDispatcher {
       totalCost += transaction.getCost();
       messageCount++;
 
-      int[] data = transaction.getMessage();
-      int dataLength = data.length;
+      MessageData data = new MessageData(transaction.getMessage());
 
-      if (dataLength > 0 && checkHash(data[0], round)) {
-        for (int dataIndex = 1; dataIndex < dataLength && data[dataIndex] != 0; dataIndex++) {
-          switch (messageTypes[data[dataIndex] - 1]) {
+      if (data.hasValuesLeft() && checkHash(data.readInt(), round)) {
+        while (data.hasValuesLeft()) {
+          int typeIndex = data.readInt();
+
+          if (typeIndex == 0) {
+            break;
+          }
+
+          switch (messageTypes[typeIndex - 1]) {
             case SOUP_FOUND:
-              SoupFoundMessage soupFoundMessage = new SoupFoundMessage(data, dataIndex + 1);
-              dataIndex += soupFoundMessage.getSize();
-              robot.onMessage(soupFoundMessage);
+              robot.onMessage(new SoupFoundMessage(data));
               break;
             case SOUP_GONE:
-              SoupGoneMessage soupGoneMessage = new SoupGoneMessage(data, dataIndex + 1);
-              dataIndex += soupGoneMessage.getSize();
-              robot.onMessage(soupGoneMessage);
+              robot.onMessage(new SoupGoneMessage(data));
+              break;
+            case ORDER:
+              robot.onMessage(new OrderMessage(data));
+              break;
+            case ORDER_COMPLETED:
+              robot.onMessage(new OrderCompletedMessage(data));
               break;
           }
         }
@@ -107,21 +109,23 @@ public class MessageDispatcher {
   }
 
   private int createHash(int round) {
-    int team = rc.getTeam().ordinal() + 1;
     int secret1 = GeneratedData.MESSAGE_HASH_SECRET_1;
     int secret2 = GeneratedData.MESSAGE_HASH_SECRET_2;
     int secret3 = GeneratedData.MESSAGE_HASH_SECRET_3;
+    int secret4 = rc.getTeam().ordinal() + 1;
+    int secret5 = rc.getMapWidth();
 
-    return (((round * team) * secret1) - secret2) * secret3;
+    return ((((round * secret1) - secret2) * secret3) - secret4) * secret5;
   }
 
   private boolean checkHash(int hash, int round) {
-    int team = rc.getTeam().ordinal() + 1;
     double secret1 = GeneratedData.MESSAGE_HASH_SECRET_1;
     double secret2 = GeneratedData.MESSAGE_HASH_SECRET_2;
     double secret3 = GeneratedData.MESSAGE_HASH_SECRET_3;
+    double secret4 = rc.getTeam().ordinal() + 1;
+    double secret5 = rc.getMapWidth();
 
-    double hashRound = ((((double) hash / secret3) + secret2) / secret1) / team;
+    double hashRound = (((((double) hash / secret5) + secret4) / secret3) + secret2) / secret1;
     return hashRound == round;
   }
 

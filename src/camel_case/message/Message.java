@@ -12,7 +12,7 @@ public abstract class Message {
     this.size = size;
   }
 
-  public abstract void write(int[] data, int start);
+  public abstract void write(MessageData data);
 
   public MessageType getType() {
     return type;

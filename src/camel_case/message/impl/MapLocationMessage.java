@@ -2,6 +2,7 @@ package camel_case.message.impl;
 
 import battlecode.common.MapLocation;
 import camel_case.message.Message;
+import camel_case.message.MessageData;
 import camel_case.message.MessageType;
 
 public class MapLocationMessage extends Message {
@@ -13,13 +14,13 @@ public class MapLocationMessage extends Message {
     this.location = location;
   }
 
-  public MapLocationMessage(MessageType type, int[] data, int start) {
-    this(type, intToMapLocation(data[start]));
+  public MapLocationMessage(MessageType type, MessageData data) {
+    this(type, data.readLocation());
   }
 
   @Override
-  public void write(int[] data, int start) {
-    data[start] = mapLocationToInt(location);
+  public void write(MessageData data) {
+    data.writeLocation(location);
   }
 
   public MapLocation getLocation() {

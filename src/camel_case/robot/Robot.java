@@ -3,6 +3,8 @@ package camel_case.robot;
 import battlecode.common.*;
 import camel_case.message.Message;
 import camel_case.message.MessageDispatcher;
+import camel_case.message.impl.OrderCompletedMessage;
+import camel_case.message.impl.OrderMessage;
 import camel_case.message.impl.SoupFoundMessage;
 import camel_case.message.impl.SoupGoneMessage;
 import camel_case.util.BetterRandom;
@@ -44,6 +46,14 @@ public abstract class Robot {
   }
 
   public void onMessage(SoupGoneMessage message) {
+    // Let implementations override this
+  }
+
+  public void onMessage(OrderMessage message) {
+    // Let implementations override this
+  }
+
+  public void onMessage(OrderCompletedMessage message) {
     // Let implementations override this
   }
 

@@ -28,7 +28,7 @@ public class RobotPlayer {
         e.printStackTrace();
       }
 
-      logBytecodeUsage(rc);
+      notifyHighBytecodeUsage(rc, 90);
       Clock.yield();
     }
   }
@@ -59,9 +59,14 @@ public class RobotPlayer {
     }
   }
 
-  private static void logBytecodeUsage(RobotController rc) {
+  private static void notifyHighBytecodeUsage(RobotController rc, double threshold) {
     int used = Clock.getBytecodeNum();
     int total = rc.getType().bytecodeLimit;
-    System.out.println(used + "/" + total);
+    double percentage = (double) used / (double) total * 100.0;
+
+    if (percentage >= threshold) {
+      String format = "High bytecode usage!\n%s/%s (%s%)";
+      System.out.println(String.format(format, used, total, (int) Math.round(percentage)));
+    }
   }
 }

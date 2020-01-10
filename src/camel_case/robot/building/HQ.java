@@ -23,11 +23,16 @@ public class HQ extends Building {
     }
 
     if (minersSpawned < 10) {
-      for (Direction direction : adjacentDirections) {
-        if (tryBuildRobot(RobotType.MINER, direction)) {
-          minersSpawned++;
-          return;
-        }
+      trySpawnMiner();
+      return;
+    }
+  }
+
+  private void trySpawnMiner() throws GameActionException {
+    for (Direction direction : adjacentDirections) {
+      if (tryBuildRobot(RobotType.MINER, direction)) {
+        minersSpawned++;
+        return;
       }
     }
   }

@@ -47,34 +47,34 @@ public class MessageDispatcher {
 
     int hash = createHash(rc.getRoundNum());
 
-    int[] data = new int[GameConstants.MAX_BLOCKCHAIN_TRANSACTION_LENGTH];
-    data[0] = hash;
+    int[] currentData = new int[GameConstants.MAX_BLOCKCHAIN_TRANSACTION_LENGTH];
+    currentData[0] = hash;
     int currentIndex = 1;
 
     while (!messageQueue.isEmpty()) {
       Message message = messageQueue.poll();
       int messageSize = message.getSize() + 1;
 
-      if (currentIndex + messageSize >= data.length) {
-        rc.submitTransaction(data, price);
+      if (currentIndex + messageSize >= currentData.length) {
+        rc.submitTransaction(currentData, price);
 
         if (rc.getTeamSoup() < price || messageQueue.isEmpty()) {
           currentIndex = -1;
           break;
         }
 
-        data = new int[GameConstants.MAX_BLOCKCHAIN_TRANSACTION_LENGTH];
-        data[0] = hash;
+        currentData = new int[GameConstants.MAX_BLOCKCHAIN_TRANSACTION_LENGTH];
+        currentData[0] = hash;
         currentIndex = 1;
       }
 
-      data[currentIndex] = message.getType().ordinal() + 1;
-      message.write(data, currentIndex + 1);
+      currentData[currentIndex] = message.getType().ordinal() + 1;
+      message.write(currentData, currentIndex + 1);
       currentIndex += messageSize;
     }
 
     if (currentIndex != -1) {
-      rc.submitTransaction(data, price);
+      rc.submitTransaction(currentData, price);
     }
   }
 

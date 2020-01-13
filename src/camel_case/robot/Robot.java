@@ -18,6 +18,8 @@ public abstract class Robot {
   protected Team myTeam;
   protected Team enemyTeam;
 
+  private int nextOrderId;
+
   protected Direction[] adjacentDirections = {
     Direction.NORTH,
     Direction.EAST,
@@ -37,6 +39,8 @@ public abstract class Robot {
 
     myTeam = rc.getTeam();
     enemyTeam = myTeam.opponent();
+
+    nextOrderId = rc.getID() * 1000;
   }
 
   public abstract void run() throws GameActionException;
@@ -55,6 +59,15 @@ public abstract class Robot {
 
   public void onMessage(OrderCompletedMessage message) {
     // Let implementations override this
+  }
+
+  protected boolean tryBuildRobot(RobotType type, Direction direction) throws GameActionException {
+    if (rc.canBuildRobot(type, direction)) {
+      rc.buildRobot(type, direction);
+      return true;
+    }
+
+    return false;
   }
 
   protected Direction randomAdjacentDirection() {
@@ -101,8 +114,22 @@ public abstract class Robot {
     return directionTowards(rc.getLocation(), to);
   }
 
+  protected boolean isAdjacentTo(MapLocation a, MapLocation b) {
+    return !a.equals(b) && a.isAdjacentTo(b);
+  }
+
+  protected boolean isAdjacentTo(MapLocation location) {
+    return isAdjacentTo(rc.getLocation(), location);
+  }
+
   public void dispatchMessage(Message message) {
     messageDispatcher.addToBatch(message);
+  }
+
+  public int dispatchOrder(RobotType robotType, MapLocation location) {
+    OrderMessage message = new OrderMessage(nextOrderId++, robotType, location);
+    dispatchMessage(message);
+    return message.getId();
   }
 
   public MessageDispatcher getMessageDispatcher() {

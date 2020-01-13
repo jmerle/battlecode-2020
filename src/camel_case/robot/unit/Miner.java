@@ -1,15 +1,16 @@
 package camel_case.robot.unit;
 
 import battlecode.common.*;
+import camel_case.message.impl.OrderCompletedMessage;
+import camel_case.message.impl.OrderMessage;
 import camel_case.message.impl.SoupFoundMessage;
 import camel_case.message.impl.SoupGoneMessage;
 import camel_case.util.BetterRandom;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 public class Miner extends Unit {
-  private MapLocation hq;
+  private MapLocation dropOff;
 
   private int soupFoundMessageCooldown = 0;
   private Set<MapLocation> soupLocations = new HashSet<>(16);
@@ -17,6 +18,9 @@ public class Miner extends Unit {
   private MapLocation[] wanderTargets;
   private int currentWanderTarget = 0;
   private int wanderTargetCooldown = 0;
+
+  private Queue<OrderMessage> buildOrders =
+      new PriorityQueue<>(Comparator.comparingInt(OrderMessage::getId));
 
   public Miner(RobotController rc) {
     super(rc, RobotType.MINER);
@@ -36,8 +40,8 @@ public class Miner extends Unit {
 
   @Override
   public void run() throws GameActionException {
-    if (hq == null) {
-      senseHQ();
+    if (dropOff == null) {
+      dropOff = senseHQ();
     }
 
     if (soupFoundMessageCooldown > 0) {
@@ -47,6 +51,13 @@ public class Miner extends Unit {
     senseSoupLocations();
 
     if (!rc.isReady()) return;
+
+    if (!buildOrders.isEmpty()) {
+      OrderMessage order = buildOrders.peek();
+      if (rc.getTeamSoup() >= order.getRobotType().cost) {
+        completeOrder(order);
+      }
+    }
 
     if (rc.getSoupCarrying() == me.soupLimit) {
       deliverSoup();
@@ -65,15 +76,28 @@ public class Miner extends Unit {
     soupLocations.remove(message.getLocation());
   }
 
-  private void senseHQ() {
+  @Override
+  public void onMessage(OrderMessage message) {
+    if (message.getRobotType().isBuilding()) {
+      buildOrders.add(message);
+    }
+  }
+
+  @Override
+  public void onMessage(OrderCompletedMessage message) {
+    removeOrder(message.getId());
+  }
+
+  private MapLocation senseHQ() {
     RobotInfo[] nearbyRobots = rc.senseNearbyRobots(-1, myTeam);
 
     for (RobotInfo robotInfo : nearbyRobots) {
       if (robotInfo.getType() == RobotType.HQ) {
-        hq = robotInfo.getLocation();
-        return;
+        return robotInfo.getLocation();
       }
     }
+
+    return null;
   }
 
   private void senseSoupLocations() throws GameActionException {
@@ -99,17 +123,53 @@ public class Miner extends Unit {
     }
   }
 
-  private void deliverSoup() throws GameActionException {
-    if (hq == null) {
+  private void completeOrder(OrderMessage order) throws GameActionException {
+    Direction direction = directionTowards(order.getLocation());
+
+    if (rc.getLocation().add(direction).equals(order.getLocation())) {
+      if (tryBuildRobot(order.getRobotType(), direction)) {
+        removeOrder(order.getId());
+        dispatchMessage(new OrderCompletedMessage(order.getId()));
+        return;
+      }
+
+      RobotInfo blockingRobot = rc.senseRobotAtLocation(order.getLocation());
+      if (blockingRobot != null && blockingRobot.getType().isBuilding()) {
+        removeOrder(order.getId());
+        return;
+      }
+    }
+
+    if (rc.getLocation().equals(order.getLocation())) {
       tryMoveRandom();
+    } else {
+      tryMoveTo(order.getLocation());
+    }
+  }
+
+  private void removeOrder(int id) {
+    Iterator<OrderMessage> it = buildOrders.iterator();
+
+    while (it.hasNext()) {
+      OrderMessage order = it.next();
+
+      if (order.getId() == id) {
+        if (order.getRobotType() == RobotType.REFINERY) {
+          dropOff = order.getLocation();
+        }
+
+        it.remove();
+        break;
+      }
+    }
+  }
+
+  private void deliverSoup() throws GameActionException {
+    if (tryRefine(directionTowards(dropOff))) {
       return;
     }
 
-    if (tryRefine(directionTowards(hq))) {
-      return;
-    }
-
-    tryMoveTo(hq);
+    tryMoveTo(dropOff);
   }
 
   private void findAndMineSoup() throws GameActionException {
@@ -122,9 +182,9 @@ public class Miner extends Unit {
 
   private boolean tryMineSoup() throws GameActionException {
     for (Direction direction : adjacentDirections) {
-      if (tryMine(direction)) {
-        MapLocation soupLocation = rc.adjacentLocation(direction);
+      MapLocation soupLocation = rc.adjacentLocation(direction);
 
+      if (tryMine(direction)) {
         if (rc.senseSoup(soupLocation) == 0) {
           soupLocations.remove(soupLocation);
           dispatchMessage(new SoupGoneMessage(soupLocation));
@@ -134,6 +194,9 @@ public class Miner extends Unit {
         }
 
         return true;
+      } else if (soupLocations.contains(soupLocation)) {
+        soupLocations.remove(soupLocation);
+        dispatchMessage(new SoupGoneMessage(soupLocation));
       }
     }
 

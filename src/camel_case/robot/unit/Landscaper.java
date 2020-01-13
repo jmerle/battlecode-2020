@@ -3,8 +3,7 @@ package camel_case.robot.unit;
 import battlecode.common.*;
 
 public class Landscaper extends Unit {
-  private MapLocation hq;
-  private MapLocation campSpot;
+  private RobotInfo hq;
 
   public Landscaper(RobotController rc) {
     super(rc, RobotType.LANDSCAPER);
@@ -13,41 +12,106 @@ public class Landscaper extends Unit {
   @Override
   public void run() throws GameActionException {
     if (hq == null) {
-      senseHQ();
-    }
-
-    if (campSpot == null) {
-      // TODO: Receive camp spot from HQ
-      return;
+      hq = senseHQ();
     }
 
     if (!rc.isReady()) return;
 
-    if (!campSpot.equals(rc.getLocation())) {
-      tryMoveTo(campSpot);
+    if (hq == null) {
+      tryMoveRandom();
       return;
     }
 
-    if (tryDigDirt(directionTowards(hq))) return;
-    if (tryDepositDirt(Direction.CENTER)) return;
+    if (!isAdjacentTo(hq.getLocation())) {
+      moveToHQ();
+      return;
+    }
+
+    if (rc.getDirtCarrying() == 0) {
+      tryDigDirt();
+      return;
+    }
+
+    if (hq.getTeam() == enemyTeam) {
+      tryDepositDirt(directionTowards(hq.getLocation()));
+    } else {
+      tryDepositDirt(Direction.CENTER);
+    }
+  }
+
+  private RobotInfo senseHQ() throws GameActionException {
+    RobotInfo[] nearbyRobots = rc.senseNearbyRobots(-1);
+
+    RobotInfo myHQ = null;
+    RobotInfo enemyHQ = null;
+
+    for (RobotInfo robotInfo : nearbyRobots) {
+      if (robotInfo.getType() == RobotType.HQ) {
+        if (robotInfo.getTeam() == myTeam) {
+          myHQ = robotInfo;
+        } else {
+          enemyHQ = robotInfo;
+        }
+      }
+    }
+
+    if (myHQ == null && enemyHQ == null) {
+      return null;
+    }
+
+    if (myHQ != null && enemyHQ == null) {
+      return myHQ;
+    }
+
+    //noinspection ConstantConditions
+    if (myHQ == null && enemyHQ != null) {
+      return enemyHQ;
+    }
 
     for (Direction direction : adjacentDirections) {
-      if (hq.isAdjacentTo(rc.getLocation().add(direction))) {
+      MapLocation targetLocation = enemyHQ.getLocation().add(direction);
+
+      if (rc.canSenseLocation(targetLocation) && rc.senseRobotAtLocation(targetLocation) == null) {
+        return enemyHQ;
+      }
+    }
+
+    return myHQ;
+  }
+
+  private void moveToHQ() throws GameActionException {
+    MapLocation bestLocation = null;
+    int bestDistance = Integer.MAX_VALUE;
+
+    for (Direction direction : adjacentDirections) {
+      MapLocation targetLocation = hq.getLocation().add(direction);
+
+      if (rc.canSenseLocation(targetLocation) && rc.senseRobotAtLocation(targetLocation) == null) {
+        int distance = rc.getLocation().distanceSquaredTo(targetLocation);
+
+        if (distance < bestDistance) {
+          bestLocation = targetLocation;
+          bestDistance = distance;
+        }
+      }
+    }
+
+    tryMoveTo(bestLocation != null ? bestLocation : hq.getLocation());
+  }
+
+  private void tryDigDirt() throws GameActionException {
+    for (Direction direction : adjacentDirections) {
+      MapLocation location = rc.getLocation().add(direction);
+      if (location.equals(hq.getLocation()) || isAdjacentTo(location, hq.getLocation())) {
+        continue;
+      }
+
+      RobotInfo robot = rc.senseRobotAtLocation(location);
+      if (robot != null && robot.getTeam() == myTeam) {
         continue;
       }
 
       if (tryDigDirt(direction)) {
-        return;
-      }
-    }
-  }
-
-  private void senseHQ() {
-    RobotInfo[] nearbyRobots = rc.senseNearbyRobots(-1, myTeam);
-
-    for (RobotInfo robotInfo : nearbyRobots) {
-      if (robotInfo.getType() == RobotType.HQ) {
-        hq = robotInfo.getLocation();
         return;
       }
     }

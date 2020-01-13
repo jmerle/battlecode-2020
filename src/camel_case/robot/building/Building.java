@@ -23,13 +23,4 @@ public abstract class Building extends Robot {
 
     return false;
   }
-
-  protected boolean tryBuildRobot(RobotType type, Direction direction) throws GameActionException {
-    if (rc.canBuildRobot(type, direction)) {
-      rc.buildRobot(type, direction);
-      return true;
-    }
-
-    return false;
-  }
 }

@@ -34,7 +34,7 @@ public class RobotPlayer {
         int limit = rc.getType().bytecodeLimit;
         System.out.println("Used too much bytecode, the limit is " + limit + "!");
       } else {
-        notifyHighBytecodeUsage(rc, 90);
+        notifyHighBytecodeUsage(rc);
       }
 
       Clock.yield();
@@ -68,13 +68,13 @@ public class RobotPlayer {
     }
   }
 
-  private static void notifyHighBytecodeUsage(RobotController rc, double threshold) {
+  private static void notifyHighBytecodeUsage(RobotController rc) {
     int used = Clock.getBytecodeNum();
     int total = rc.getType().bytecodeLimit;
     double percentage = (double) used / (double) total * 100.0;
 
-    if (percentage >= threshold) {
-      String format = "High bytecode usage!\n%s/%s (%s%)";
+    if (percentage >= 90) {
+      String format = "High bytecode usage!\n%s/%s (%s%%)";
       System.out.println(String.format(format, used, total, (int) Math.round(percentage)));
     }
   }

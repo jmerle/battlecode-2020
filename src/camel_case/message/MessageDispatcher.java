@@ -48,7 +48,7 @@ public class MessageDispatcher {
     MessageData currentData = new MessageData(hash);
 
     while (!messageQueue.isEmpty()) {
-      Message message = messageQueue.poll();
+      Message message = messageQueue.peek();
       int messageSize = message.getSize() + 1;
 
       if (!currentData.hasSpace(messageSize)) {
@@ -64,6 +64,7 @@ public class MessageDispatcher {
 
       currentData.writeInt(message.getType().ordinal() + 1);
       message.write(currentData);
+      messageQueue.poll();
     }
 
     if (currentData != null) {
@@ -73,6 +74,11 @@ public class MessageDispatcher {
 
   public void handleIncomingMessages() throws GameActionException {
     int round = rc.getRoundNum() - 1;
+
+    if (round <= 0) {
+      return;
+    }
+
     Transaction[] transactions = rc.getBlock(round);
 
     for (Transaction transaction : transactions) {
@@ -81,7 +87,7 @@ public class MessageDispatcher {
 
       MessageData data = new MessageData(transaction.getMessage());
 
-      if (data.hasValuesLeft() && checkHash(data.readInt(), round)) {
+      if (data.hasValuesLeft() && isHashValid(data.readInt(), round)) {
         while (data.hasValuesLeft()) {
           int typeIndex = data.readInt();
 
@@ -118,6 +124,16 @@ public class MessageDispatcher {
     return ((((round * secret1) - secret2) * secret3) - secret4) * secret5;
   }
 
+  private boolean isHashValid(int hash, int round) {
+    for (int i = 0; i < 10; i++) {
+      if (checkHash(hash, round - i)) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
   private boolean checkHash(int hash, int round) {
     double secret1 = GeneratedData.MESSAGE_HASH_SECRET_1;
     double secret2 = GeneratedData.MESSAGE_HASH_SECRET_2;
@@ -131,7 +147,7 @@ public class MessageDispatcher {
 
   private int getPrice() {
     if (messageCount == 0) {
-      return 0;
+      return 1;
     }
 
     return (int) (Math.round((double) totalCost / (double) messageCount) + 1);

@@ -122,6 +122,13 @@ public abstract class Robot {
     return isAdjacentTo(rc.getLocation(), location);
   }
 
+  protected boolean isOnTheMap(MapLocation location) {
+    return location.x >= 0
+        && location.x < rc.getMapWidth()
+        && location.y >= 0
+        && location.y < rc.getMapHeight();
+  }
+
   public void dispatchMessage(Message message) {
     messageDispatcher.addToBatch(message);
   }

@@ -4,6 +4,7 @@ import battlecode.common.*;
 
 public class Landscaper extends Unit {
   private RobotInfo hq;
+  private MapLocation designSchool;
 
   public Landscaper(RobotController rc) {
     super(rc, RobotType.LANDSCAPER);
@@ -15,6 +16,10 @@ public class Landscaper extends Unit {
       hq = senseHQ();
     }
 
+    if (designSchool == null) {
+      designSchool = senseDesignSchool();
+    }
+
     if (!rc.isReady()) return;
 
     if (hq == null) {
@@ -24,6 +29,10 @@ public class Landscaper extends Unit {
 
     if (!isAdjacentTo(hq.getLocation())) {
       moveToHQ();
+      return;
+    }
+
+    if (tryMoveAwayFromDesignSchool()) {
       return;
     }
 
@@ -79,6 +88,17 @@ public class Landscaper extends Unit {
     return myHQ;
   }
 
+  private MapLocation senseDesignSchool() {
+    RobotInfo[] nearbyRobots = rc.senseNearbyRobots(-1, myTeam);
+    for (RobotInfo robot : nearbyRobots) {
+      if (robot.getType() == RobotType.DESIGN_SCHOOL) {
+        return robot.getLocation();
+      }
+    }
+
+    return null;
+  }
+
   private void moveToHQ() throws GameActionException {
     MapLocation bestLocation = null;
     int bestDistance = Integer.MAX_VALUE;
@@ -97,6 +117,26 @@ public class Landscaper extends Unit {
     }
 
     tryMoveTo(bestLocation != null ? bestLocation : hq.getLocation());
+  }
+
+  private boolean tryMoveAwayFromDesignSchool() throws GameActionException {
+    Direction bestDirection = null;
+    int bestDistance = rc.getLocation().distanceSquaredTo(designSchool);
+
+    for (Direction direction : adjacentDirections) {
+      MapLocation location = hq.getLocation().add(direction);
+
+      if (rc.senseRobotAtLocation(location) == null) {
+        int distance = hq.getLocation().add(direction).distanceSquaredTo(designSchool);
+
+        if (distance > bestDistance) {
+          bestDirection = direction;
+          bestDistance = distance;
+        }
+      }
+    }
+
+    return bestDirection != null && tryMoveTo(hq.getLocation().add(bestDirection));
   }
 
   private void tryDigDirt() throws GameActionException {

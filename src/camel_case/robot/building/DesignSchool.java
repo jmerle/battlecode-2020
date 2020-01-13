@@ -47,6 +47,8 @@ public class DesignSchool extends Building {
         if (robot == null || !robot.getType().isBuilding()) {
           emptyLocations++;
         }
+      } else if (!rc.canSenseLocation(adjacentLocation)) {
+        emptyLocations++;
       }
     }
 

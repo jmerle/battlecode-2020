@@ -8,6 +8,17 @@ public abstract class Unit extends Robot {
     super(rc, type);
   }
 
+  protected boolean tryMove(Direction direction) throws GameActionException {
+    if (rc.canMove(direction)) {
+      if (me.canFly() || !rc.senseFlooding(rc.adjacentLocation(direction))) {
+        rc.move(direction);
+        return true;
+      }
+    }
+
+    return false;
+  }
+
   protected boolean tryMoveRandom() throws GameActionException {
     return tryMove(randomAdjacentDirection());
   }
@@ -29,16 +40,5 @@ public abstract class Unit extends Robot {
     if (tryMove(right.rotateRight())) return true;
     if (tryMove(right.rotateRight().rotateRight())) return true;
     return tryMove(forward.opposite());
-  }
-
-  protected boolean tryMove(Direction direction) throws GameActionException {
-    if (rc.canMove(direction)) {
-      if (me.canFly() || !rc.senseFlooding(rc.adjacentLocation(direction))) {
-        rc.move(direction);
-        return true;
-      }
-    }
-
-    return false;
   }
 }

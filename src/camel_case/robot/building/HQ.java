@@ -8,8 +8,6 @@ import java.util.Queue;
 public class HQ extends Building {
   private int minersSpawned = 0;
 
-  private Queue<MapLocation> buildLocations = null;
-
   private boolean dispatchedBuildOrders = false;
 
   public HQ(RobotController rc) {
@@ -18,10 +16,6 @@ public class HQ extends Building {
 
   @Override
   public void run() throws GameActionException {
-    if (buildLocations == null) {
-      buildLocations = findBuildLocations();
-    }
-
     if (!rc.isReady()) return;
 
     if (tryShootEnemyDrone()) {
@@ -47,7 +41,10 @@ public class HQ extends Building {
       MapLocation location = rc.getLocation().translate(check[0], check[1]);
 
       if (rc.onTheMap(location) && !rc.senseFlooding(location)) {
-        locations.add(location);
+        RobotInfo robotInfo = rc.senseRobotAtLocation(location);
+        if (robotInfo == null || !robotInfo.getType().isBuilding()) {
+          locations.add(location);
+        }
       }
     }
 
@@ -63,7 +60,7 @@ public class HQ extends Building {
     }
   }
 
-  private void dispatchBuildOrders() {
+  private void dispatchBuildOrders() throws GameActionException {
     int designSchoolRange = RobotType.DESIGN_SCHOOL.sensorRadiusSquared;
     RobotInfo[] nearbyRobots = rc.senseNearbyRobots(designSchoolRange, myTeam);
     boolean designSchoolInRange = false;
@@ -74,13 +71,20 @@ public class HQ extends Building {
       }
     }
 
-    if (buildLocations.size() < (designSchoolInRange ? 1 : 2)) {
+    Queue<MapLocation> buildLocations = findBuildLocations();
+
+    if (buildLocations.isEmpty()) {
+      return;
+    }
+
+    if (buildLocations.size() == 1 && !designSchoolInRange) {
+      dispatchOrder(RobotType.DESIGN_SCHOOL, buildLocations.poll());
       return;
     }
 
     dispatchOrder(RobotType.REFINERY, buildLocations.poll());
 
-    if (!designSchoolInRange) {
+    if (!designSchoolInRange && !buildLocations.isEmpty()) {
       dispatchOrder(RobotType.DESIGN_SCHOOL, buildLocations.poll());
     }
   }

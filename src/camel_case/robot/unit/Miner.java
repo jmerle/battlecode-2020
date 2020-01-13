@@ -109,7 +109,9 @@ public class Miner extends Unit {
       for (int x = -sensorRadius; x < sensorRadius; x++) {
         MapLocation location = new MapLocation(myLocation.x + x, myLocation.y + y);
 
-        if (rc.canSenseLocation(location) && rc.senseSoup(location) > 0) {
+        if (rc.canSenseLocation(location)
+            && rc.senseSoup(location) > 0
+            && !rc.senseFlooding(location)) {
           if (soupLocations.add(location) && soupFoundMessageCooldown == 0) {
             dispatchMessage(new SoupFoundMessage(location));
             soupFoundDispatched = true;

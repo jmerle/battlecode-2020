@@ -5,13 +5,21 @@ import camel_case.robot.Robot;
 
 public abstract class Unit extends Robot {
   private MapLocation currentTarget;
+
   private boolean isBugMoving;
   private int distanceBeforeBugMoving;
   private boolean huggingLeftWall;
   private MapLocation lastHuggedWall;
 
+  private int distanceToTarget;
+  private int turnsSpentMovingTowardsTarget;
+
   public Unit(RobotController rc, RobotType type) {
     super(rc, type);
+  }
+
+  protected boolean isStuck() {
+    return turnsSpentMovingTowardsTarget > distanceToTarget * 2;
   }
 
   protected boolean tryMove(Direction direction) throws GameActionException {
@@ -33,6 +41,10 @@ public abstract class Unit extends Robot {
     if (!target.equals(currentTarget)) {
       currentTarget = target;
       isBugMoving = false;
+      distanceToTarget = (int) Math.ceil(Math.sqrt(rc.getLocation().distanceSquaredTo(target)));
+      turnsSpentMovingTowardsTarget = 1;
+    } else {
+      turnsSpentMovingTowardsTarget++;
     }
 
     if (isBugMoving) {

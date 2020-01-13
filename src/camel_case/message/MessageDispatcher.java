@@ -4,10 +4,7 @@ import battlecode.common.GameActionException;
 import battlecode.common.RobotController;
 import battlecode.common.Transaction;
 import camel_case.GeneratedData;
-import camel_case.message.impl.OrderCompletedMessage;
-import camel_case.message.impl.OrderMessage;
-import camel_case.message.impl.SoupFoundMessage;
-import camel_case.message.impl.SoupGoneMessage;
+import camel_case.message.impl.*;
 import camel_case.robot.Robot;
 
 import java.util.ArrayDeque;
@@ -23,6 +20,8 @@ public class MessageDispatcher {
 
   private int totalCost = 0;
   private int messageCount = 0;
+
+  private int lastHandledRound = 0;
 
   public MessageDispatcher(RobotController rc, Robot robot) {
     this.rc = rc;
@@ -73,8 +72,14 @@ public class MessageDispatcher {
   }
 
   public void handleIncomingMessages() throws GameActionException {
-    int round = rc.getRoundNum() - 1;
+    for (int i = lastHandledRound + 1, iMax = rc.getRoundNum(); i < iMax; i++) {
+      handleIncomingMessages(i);
+    }
 
+    lastHandledRound = rc.getRoundNum() - 1;
+  }
+
+  public void handleIncomingMessages(int round) throws GameActionException {
     if (round <= 0) {
       return;
     }
@@ -107,6 +112,15 @@ public class MessageDispatcher {
               break;
             case ORDER_COMPLETED:
               robot.onMessage(new OrderCompletedMessage(data));
+              break;
+            case START_RUSH:
+              robot.onMessage(new StartRushMessage(data));
+              break;
+            case ENEMY_FOUND:
+              robot.onMessage(new EnemyFoundMessage(data));
+              break;
+            case ENEMY_NOT_FOUND:
+              robot.onMessage(new EnemyNotFoundMessage(data));
               break;
           }
         }

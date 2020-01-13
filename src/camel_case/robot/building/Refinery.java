@@ -11,10 +11,10 @@ public class Refinery extends Building {
 
   @Override
   public void run() throws GameActionException {
-    // TODO: Implement non-action logic
+    // TODO(jmerle): Implement non-action logic
 
     if (!rc.isReady()) return;
 
-    // TODO: Implement action logic
+    // TODO(jmerle): Implement action logic
   }
 }

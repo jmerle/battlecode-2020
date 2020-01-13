@@ -1,14 +1,26 @@
 package camel_case.robot.building;
 
 import battlecode.common.*;
+import camel_case.message.impl.EnemyFoundMessage;
+import camel_case.message.impl.EnemyNotFoundMessage;
+import camel_case.message.impl.OrderMessage;
+import camel_case.message.impl.StartRushMessage;
 
 import java.util.ArrayDeque;
 import java.util.Queue;
 
 public class HQ extends Building {
-  private int minersSpawned = 0;
+  private enum RushState {
+    NOT_STARTED,
+    STARTED,
+    DONE
+  }
 
+  private RushState rushState = RushState.NOT_STARTED;
+  private int minersSpawned = 0;
   private boolean dispatchedBuildOrders = false;
+
+  private MapLocation enemyHq;
 
   public HQ(RobotController rc) {
     super(rc, RobotType.HQ);
@@ -16,9 +28,22 @@ public class HQ extends Building {
 
   @Override
   public void run() throws GameActionException {
+    if (rushState == RushState.NOT_STARTED && minersSpawned == 1) {
+      startRush();
+    }
+
     if (!rc.isReady()) return;
 
     if (tryShootEnemyDrone()) {
+      return;
+    }
+
+    if (minersSpawned < 3) {
+      trySpawnMiner();
+      return;
+    }
+
+    if (rushState != RushState.DONE) {
       return;
     }
 
@@ -30,6 +55,35 @@ public class HQ extends Building {
     if (!dispatchedBuildOrders) {
       dispatchBuildOrders();
       dispatchedBuildOrders = true;
+    }
+  }
+
+  @Override
+  public void onMessage(OrderMessage message) {
+    if (message.getRobotType() == RobotType.DESIGN_SCHOOL && rushState == RushState.STARTED) {
+      rushState = RushState.DONE;
+    }
+  }
+
+  @Override
+  public void onMessage(EnemyFoundMessage message) {
+    enemyHq = message.getLocation();
+  }
+
+  @Override
+  public void onMessage(EnemyNotFoundMessage message) {
+    rushState = RushState.DONE;
+  }
+
+  private void startRush() {
+    rushState = RushState.STARTED;
+
+    RobotInfo[] nearbyRobots = rc.senseNearbyRobots(-1, myTeam);
+    for (RobotInfo robot : nearbyRobots) {
+      if (robot.getType() == RobotType.MINER) {
+        dispatchMessage(new StartRushMessage(robot.getID()));
+        return;
+      }
     }
   }
 
@@ -82,14 +136,14 @@ public class HQ extends Building {
     }
 
     if (buildLocations.size() == 1 && !designSchoolInRange) {
-      dispatchOrder(RobotType.DESIGN_SCHOOL, buildLocations.poll());
+      dispatchMessage(new OrderMessage(1, RobotType.DESIGN_SCHOOL, buildLocations.poll()));
       return;
     }
 
-    dispatchOrder(RobotType.REFINERY, buildLocations.poll());
+    dispatchMessage(new OrderMessage(1, RobotType.REFINERY, buildLocations.poll()));
 
     if (!designSchoolInRange && !buildLocations.isEmpty()) {
-      dispatchOrder(RobotType.DESIGN_SCHOOL, buildLocations.poll());
+      dispatchMessage(new OrderMessage(2, RobotType.DESIGN_SCHOOL, buildLocations.poll()));
     }
   }
 }

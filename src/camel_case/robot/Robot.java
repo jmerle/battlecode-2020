@@ -3,10 +3,7 @@ package camel_case.robot;
 import battlecode.common.*;
 import camel_case.message.Message;
 import camel_case.message.MessageDispatcher;
-import camel_case.message.impl.OrderCompletedMessage;
-import camel_case.message.impl.OrderMessage;
-import camel_case.message.impl.SoupFoundMessage;
-import camel_case.message.impl.SoupGoneMessage;
+import camel_case.message.impl.*;
 import camel_case.util.BetterRandom;
 
 public abstract class Robot {
@@ -58,6 +55,18 @@ public abstract class Robot {
   }
 
   public void onMessage(OrderCompletedMessage message) {
+    // Let implementations override this
+  }
+
+  public void onMessage(StartRushMessage message) {
+    // Let implementations override this
+  }
+
+  public void onMessage(EnemyFoundMessage message) {
+    // Let implementations override this
+  }
+
+  public void onMessage(EnemyNotFoundMessage message) {
     // Let implementations override this
   }
 
@@ -131,12 +140,6 @@ public abstract class Robot {
 
   public void dispatchMessage(Message message) {
     messageDispatcher.addToBatch(message);
-  }
-
-  public int dispatchOrder(RobotType robotType, MapLocation location) {
-    OrderMessage message = new OrderMessage(nextOrderId++, robotType, location);
-    dispatchMessage(message);
-    return message.getId();
   }
 
   public MessageDispatcher getMessageDispatcher() {

@@ -1,10 +1,7 @@
 package camel_case.robot.unit;
 
 import battlecode.common.*;
-import camel_case.message.impl.OrderCompletedMessage;
-import camel_case.message.impl.OrderMessage;
-import camel_case.message.impl.SoupFoundMessage;
-import camel_case.message.impl.SoupGoneMessage;
+import camel_case.message.impl.*;
 import camel_case.util.BetterRandom;
 
 import java.util.*;
@@ -18,6 +15,9 @@ public class Miner extends Unit {
   private MapLocation[] wanderTargets;
   private int currentWanderTarget = 0;
   private int wanderTargetCooldown = 0;
+
+  private List<MapLocation> possibleEnemyLocations = new ArrayList<>(3);
+  private boolean dispatchedEnemyLocation = false;
 
   private Queue<OrderMessage> buildOrders =
       new PriorityQueue<>(Comparator.comparingInt(OrderMessage::getId));
@@ -52,10 +52,16 @@ public class Miner extends Unit {
 
     if (!rc.isReady()) return;
 
+    if (!possibleEnemyLocations.isEmpty()) {
+      rush();
+      return;
+    }
+
     if (!buildOrders.isEmpty()) {
       OrderMessage order = buildOrders.peek();
       if (rc.getTeamSoup() >= order.getRobotType().cost) {
         completeOrder(order);
+        return;
       }
     }
 
@@ -88,6 +94,13 @@ public class Miner extends Unit {
     removeOrder(message.getId());
   }
 
+  @Override
+  public void onMessage(StartRushMessage message) {
+    if (message.getRobotId() == rc.getID()) {
+      fillPossibleEnemyLocations();
+    }
+  }
+
   private MapLocation senseHQ() {
     RobotInfo[] nearbyRobots = rc.senseNearbyRobots(-1, myTeam);
 
@@ -102,12 +115,11 @@ public class Miner extends Unit {
 
   private void senseSoupLocations() throws GameActionException {
     int sensorRadius = (int) Math.sqrt(me.sensorRadiusSquared + 1);
-    MapLocation myLocation = rc.getLocation();
     boolean soupFoundDispatched = false;
 
     for (int y = -sensorRadius; y < sensorRadius; y++) {
       for (int x = -sensorRadius; x < sensorRadius; x++) {
-        MapLocation location = new MapLocation(myLocation.x + x, myLocation.y + y);
+        MapLocation location = rc.getLocation().translate(x, y);
 
         if (rc.canSenseLocation(location)
             && rc.senseSoup(location) > 0
@@ -123,6 +135,87 @@ public class Miner extends Unit {
     if (soupFoundDispatched) {
       soupFoundMessageCooldown = 25;
     }
+  }
+
+  private void fillPossibleEnemyLocations() {
+    int x = dropOff.x;
+    int y = dropOff.y;
+
+    int horizontalMiddle = rc.getMapWidth() / 2;
+    int verticalMiddle = rc.getMapHeight() / 2;
+
+    int horizontalOffset = horizontalMiddle - x;
+    int verticalOffset = verticalMiddle - y;
+
+    int xOffset = horizontalMiddle + horizontalOffset;
+    int yOffset = verticalMiddle + verticalOffset;
+
+    possibleEnemyLocations.add(new MapLocation(xOffset - 1, y));
+    possibleEnemyLocations.add(new MapLocation(xOffset, y));
+    possibleEnemyLocations.add(new MapLocation(xOffset + 1, y));
+
+    possibleEnemyLocations.add(new MapLocation(x, yOffset - 1));
+    possibleEnemyLocations.add(new MapLocation(x, yOffset));
+    possibleEnemyLocations.add(new MapLocation(x, yOffset + 1));
+
+    possibleEnemyLocations.add(new MapLocation(xOffset - 1, yOffset - 1));
+    possibleEnemyLocations.add(new MapLocation(xOffset, yOffset));
+    possibleEnemyLocations.add(new MapLocation(xOffset + 1, yOffset + 1));
+  }
+
+  private void rush() throws GameActionException {
+    if (possibleEnemyLocations.isEmpty()) {
+      dispatchMessage(new EnemyNotFoundMessage());
+      return;
+    }
+
+    if (isStuck()) {
+      possibleEnemyLocations.remove(0);
+      rush();
+      return;
+    }
+
+    MapLocation targetLocation = possibleEnemyLocations.get(0);
+
+    if (rc.canSenseLocation(targetLocation)) {
+      RobotInfo robot = rc.senseRobotAtLocation(targetLocation);
+      if (robot == null || robot.getType() != RobotType.HQ || robot.getTeam() != enemyTeam) {
+        possibleEnemyLocations.remove(0);
+        rush();
+        return;
+      }
+
+      if (!dispatchedEnemyLocation) {
+        dispatchMessage(new EnemyFoundMessage(targetLocation));
+        dispatchedEnemyLocation = false;
+      }
+
+      boolean canSenseAllDirections = true;
+      for (Direction direction : adjacentDirections) {
+        if (!rc.canSenseLocation(targetLocation.add(direction))) {
+          canSenseAllDirections = false;
+          break;
+        }
+      }
+
+      if (!canSenseAllDirections) {
+        tryMoveTo(targetLocation);
+        return;
+      }
+
+      for (Direction direction : adjacentDirections) {
+        MapLocation location = targetLocation.add(direction);
+
+        if (location.equals(rc.getLocation()) || rc.senseRobotAtLocation(location) == null) {
+          dispatchMessage(new OrderMessage(0, RobotType.DESIGN_SCHOOL, location));
+          break;
+        }
+      }
+
+      possibleEnemyLocations.clear();
+    }
+
+    tryMoveTo(targetLocation);
   }
 
   private void completeOrder(OrderMessage order) throws GameActionException {

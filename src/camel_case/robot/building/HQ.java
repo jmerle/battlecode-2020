@@ -36,11 +36,15 @@ public class HQ extends Building {
   private Queue<MapLocation> findBuildLocations() throws GameActionException {
     Queue<MapLocation> locations = new ArrayDeque<>(8);
 
+    int myElevation = rc.senseElevation(rc.getLocation());
+
     int[][] checks = {{-2, -2}, {0, -2}, {2, -2}, {-2, 0}, {2, 0}, {-2, 2}, {0, 2}, {2, 2}};
     for (int[] check : checks) {
       MapLocation location = rc.getLocation().translate(check[0], check[1]);
 
-      if (rc.onTheMap(location) && !rc.senseFlooding(location)) {
+      if (rc.onTheMap(location)
+          && !rc.senseFlooding(location)
+          && Math.abs(myElevation - rc.senseElevation(location)) <= 3) {
         RobotInfo robotInfo = rc.senseRobotAtLocation(location);
         if (robotInfo == null || !robotInfo.getType().isBuilding()) {
           locations.add(location);

@@ -221,6 +221,26 @@ public class Miner extends Unit {
   private void completeOrder(OrderMessage order) throws GameActionException {
     Direction direction = directionTowards(order.getLocation());
 
+    if (rc.canSenseLocation(order.getLocation())) {
+      RobotInfo robot = rc.senseRobotAtLocation(order.getLocation());
+      if (robot != null && robot.getTeam() == enemyTeam) {
+        boolean enemyHqNearby = false;
+
+        for (RobotInfo nearbyRobot : rc.senseNearbyRobots(-1, enemyTeam)) {
+          if (nearbyRobot.getType() == RobotType.HQ) {
+            enemyHqNearby = true;
+            break;
+          }
+        }
+
+        if (enemyHqNearby) {
+          removeOrder(order.getId());
+          dispatchMessage(new OrderCompletedMessage(order.getId()));
+          return;
+        }
+      }
+    }
+
     if (rc.getLocation().add(direction).equals(order.getLocation())) {
       if (tryBuildRobot(order.getRobotType(), direction)) {
         removeOrder(order.getId());

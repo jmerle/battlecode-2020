@@ -17,18 +17,11 @@ public class RobotPlayer {
       return;
     }
 
-    int startTurn = rc.getRoundNum();
-
     //noinspection InfiniteLoopStatement
     while (true) {
-      try {
-        robot.getMessageDispatcher().handleIncomingMessages();
-        robot.run();
-        robot.getMessageDispatcher().sendBatch();
-      } catch (Exception e) {
-        System.out.println("Exception in robot #" + rc.getID() + " (" + rc.getType() + ")");
-        e.printStackTrace();
-      }
+      int startTurn = rc.getRoundNum();
+
+      performTurn(rc, robot);
 
       if (rc.getRoundNum() > startTurn) {
         int limit = rc.getType().bytecodeLimit;
@@ -38,7 +31,17 @@ public class RobotPlayer {
       }
 
       Clock.yield();
-      startTurn = rc.getRoundNum();
+    }
+  }
+
+  private static void performTurn(RobotController rc, Robot robot) {
+    try {
+      robot.getMessageDispatcher().handleIncomingMessages();
+      robot.run();
+      robot.getMessageDispatcher().sendBatch();
+    } catch (Exception e) {
+      System.out.println("Exception in robot #" + rc.getID() + " (" + rc.getType() + ")");
+      e.printStackTrace();
     }
   }
 

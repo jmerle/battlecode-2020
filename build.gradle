@@ -53,6 +53,10 @@ def examplefuncsplayerPath = "src/examplefuncsplayer/RobotPlayer.java"
 repositories {
     maven {
         url "https://maven.pkg.github.com/battlecode/battlecode20"
+        credentials {
+            username = "battlecodedownloadpackage"
+            password = get("https://2020.battlecode.org/access.txt")
+        }
     }
 }
 

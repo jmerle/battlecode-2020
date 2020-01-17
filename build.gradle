@@ -82,7 +82,9 @@ task checkForUpdates {
 
 task update {
     group "battlecode"
-    description "Updates the Battlecode version and the default players."
+    description "Updates the Battlecode version and the examplefuncsplayer."
+
+    finalizedBy "updateLecturePlayer"
 
     doLast {
         def currentVersion = battlecodeVersion
@@ -97,8 +99,16 @@ task update {
 
         file(examplefuncsplayerPath).text = get(examplefuncsplayerUrl) + "\n"
         println("Updated examplefuncsplayer to latest version")
+    }
+}
 
-        file(lectureplayerPath).text = get(lectureplayerUrl) + "\n"
+task updateLecturePlayer(type: Exec) {
+    group "battlecode"
+    description "Updates the lectureplayer."
+
+    commandLine "git", "submodule", "update", "--remote", "--merge"
+
+    doLast {
         println("Updated lectureplayer to latest version")
     }
 }

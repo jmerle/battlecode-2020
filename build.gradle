@@ -50,16 +50,9 @@ def battlecodeVersionUrl = "https://2020.battlecode.org/version.txt"
 def examplefuncsplayerUrl = "https://raw.githubusercontent.com/battlecode/battlecode20-scaffold/master/src/examplefuncsplayer/RobotPlayer.java"
 def examplefuncsplayerPath = "src/examplefuncsplayer/RobotPlayer.java"
 
-def lectureplayerUrl = "https://raw.githubusercontent.com/battlecode/lectureplayer/master/RobotPlayer.java"
-def lectureplayerPath = "src/lectureplayer/RobotPlayer.java"
-
 repositories {
     maven {
         url "https://maven.pkg.github.com/battlecode/battlecode20"
-        credentials {
-            username = "battlecodedownloadpackage"
-            password = get("https://2020.battlecode.org/access.txt")
-        }
     }
 }
 
@@ -83,10 +76,6 @@ task checkForUpdates {
 
         if (file(examplefuncsplayerPath).text.trim() != get(examplefuncsplayerUrl)) {
             print("\n\n\nEXAMPLEFUNCSPLAYER UPDATE AVAILABLE\n\n\n")
-        }
-
-        if (file(lectureplayerPath).text.trim() != get(lectureplayerUrl)) {
-            print("\n\n\nLECTUREPLAYER UPDATE AVAILABLE\n\n\n")
         }
     }
 }
@@ -144,6 +133,7 @@ task run(type: JavaExec) {
         "-Dbc.server.map-path=maps",
         "-Dbc.server.debug=true",
         "-Dbc.engine.debug-methods=true",
+        "-Dbc.engine.enable-profiler=${project.property("profilerEnabled")}",
         "-Dbc.game.team-a=${project.property("teamA")}",
         "-Dbc.game.team-b=${project.property("teamB")}",
         "-Dbc.game.team-a.url=${project.property("classLocation")}",
@@ -169,6 +159,7 @@ task runFromClient(type: JavaExec) {
         "-Dbc.server.debug=false",
         "-Dbc.server.robot-player-to-system-out=false",
         "-Dbc.engine.debug-methods=true",
+        "-Dbc.engine.enable-profiler=${project.property("profilerEnabled")}",
         "-Dbc.game.team-a=${project.property("teamA")}",
         "-Dbc.game.team-b=${project.property("teamB")}",
         "-Dbc.game.team-a.url=${project.property("classLocation")}",
@@ -194,6 +185,7 @@ task runDebug(type: JavaExec) {
         "-Dbc.server.debug=false",
         "-Dbc.server.robot-player-to-system-out=true",
         "-Dbc.engine.debug-methods=true",
+        "-Dbc.engine.enable-profiler=${project.property("profilerEnabled")}",
         "-Dbc.game.team-a=${project.property("teamA")}",
         "-Dbc.game.team-b=${project.property("teamB")}",
         "-Dbc.game.team-a.url=${project.property("classLocation")}",

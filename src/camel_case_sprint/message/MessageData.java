@@ -1,4 +1,4 @@
-package camel_case.message;
+package camel_case_sprint.message;
 
 import battlecode.common.GameConstants;
 import battlecode.common.MapLocation;

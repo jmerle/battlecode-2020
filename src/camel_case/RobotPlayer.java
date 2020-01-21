@@ -19,22 +19,14 @@ public class RobotPlayer {
 
     //noinspection InfiniteLoopStatement
     while (true) {
-      int startTurn = rc.getRoundNum();
-
       performTurn(rc, robot);
-
-      if (rc.getRoundNum() > startTurn) {
-        int limit = rc.getType().bytecodeLimit;
-        System.out.println("Used too much bytecode, the limit is " + limit + "!");
-      } else {
-        notifyHighBytecodeUsage(rc);
-      }
-
       Clock.yield();
     }
   }
 
   private static void performTurn(RobotController rc, Robot robot) {
+    int startTurn = rc.getRoundNum();
+
     try {
       robot.getMessageDispatcher().handleIncomingMessages();
       robot.run();
@@ -42,6 +34,13 @@ public class RobotPlayer {
     } catch (Exception e) {
       System.out.println("Exception in robot #" + rc.getID() + " (" + rc.getType() + ")");
       e.printStackTrace();
+    }
+
+    if (rc.getRoundNum() > startTurn) {
+      int limit = rc.getType().bytecodeLimit;
+      System.out.println("Used too much bytecode, the limit is " + limit + "!");
+    } else {
+      notifyHighBytecodeUsage(rc);
     }
   }
 

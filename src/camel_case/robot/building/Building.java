@@ -13,10 +13,10 @@ public abstract class Building extends Robot {
         rc.senseNearbyRobots(GameConstants.NET_GUN_SHOOT_RADIUS_SQUARED, enemyTeam);
 
     for (RobotInfo robotInfo : nearbyEnemies) {
-      int robotId = robotInfo.getID();
+      int id = robotInfo.getID();
 
-      if (rc.canShootUnit(robotId)) {
-        rc.shootUnit(robotId);
+      if (rc.canShootUnit(id)) {
+        rc.shootUnit(id);
         return true;
       }
     }

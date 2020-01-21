@@ -5,7 +5,7 @@ import camel_case.message.Message;
 import camel_case.message.MessageData;
 import camel_case.message.MessageType;
 
-public class MapLocationMessage extends Message {
+public abstract class MapLocationMessage extends Message {
   private MapLocation location;
 
   public MapLocationMessage(MessageType type, MapLocation location) {

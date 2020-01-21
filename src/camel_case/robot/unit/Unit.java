@@ -2,6 +2,7 @@ package camel_case.robot.unit;
 
 import battlecode.common.*;
 import camel_case.robot.Robot;
+import camel_case.util.BetterRandom;
 
 public abstract class Unit extends Robot {
   private MapLocation currentTarget;
@@ -34,7 +35,7 @@ public abstract class Unit extends Robot {
   }
 
   protected boolean tryMoveRandom() throws GameActionException {
-    return tryMove(randomAdjacentDirection());
+    return tryMove(adjacentDirections[BetterRandom.nextInt(adjacentDirections.length)]);
   }
 
   protected boolean tryMoveTo(MapLocation target) throws GameActionException {

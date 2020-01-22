@@ -28,7 +28,6 @@ public class Miner extends Unit {
 
     int mapWidth = rc.getMapWidth();
     int mapHeight = rc.getMapHeight();
-
     int wanderMargin = 3;
 
     wanderTargets =

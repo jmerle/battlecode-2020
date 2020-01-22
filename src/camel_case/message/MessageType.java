@@ -4,5 +4,6 @@ public enum MessageType {
   SOUP_NEARBY,
 
   ORDER,
-  REMOVE_ORDER,
+  ORDER_COMPLETED,
+  ORDER_CANCELED,
 }

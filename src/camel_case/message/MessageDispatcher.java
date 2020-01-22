@@ -4,9 +4,7 @@ import battlecode.common.GameActionException;
 import battlecode.common.RobotController;
 import battlecode.common.Transaction;
 import camel_case.GeneratedData;
-import camel_case.message.impl.OrderMessage;
-import camel_case.message.impl.RemoveOrderMessage;
-import camel_case.message.impl.SoupNearbyMessage;
+import camel_case.message.impl.*;
 import camel_case.robot.Robot;
 
 import java.util.ArrayDeque;
@@ -123,8 +121,11 @@ public class MessageDispatcher {
           case ORDER:
             robot.onMessage(new OrderMessage(data));
             break;
-          case REMOVE_ORDER:
-            robot.onMessage(new RemoveOrderMessage(data));
+          case ORDER_COMPLETED:
+            robot.onMessage(new OrderCompletedMessage(data));
+            break;
+          case ORDER_CANCELED:
+            robot.onMessage(new OrderCanceledMessage(data));
             break;
         }
       }

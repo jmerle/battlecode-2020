@@ -3,8 +3,9 @@ package camel_case.robot;
 import battlecode.common.*;
 import camel_case.message.Message;
 import camel_case.message.MessageDispatcher;
+import camel_case.message.impl.OrderCanceledMessage;
+import camel_case.message.impl.OrderCompletedMessage;
 import camel_case.message.impl.OrderMessage;
-import camel_case.message.impl.RemoveOrderMessage;
 import camel_case.message.impl.SoupNearbyMessage;
 import camel_case.util.Color;
 
@@ -51,11 +52,16 @@ public abstract class Robot {
   }
 
   public void onMessage(OrderMessage message) {
+    removeOrder(message.getId());
     orders.add(message);
   }
 
-  public void onMessage(RemoveOrderMessage message) {
-    orders.removeIf(order -> order.getId() == message.getId());
+  public void onMessage(OrderCompletedMessage message) {
+    removeOrder(message.getId());
+  }
+
+  public void onMessage(OrderCanceledMessage message) {
+    removeOrder(message.getId());
   }
 
   protected boolean tryBuildRobot(RobotType type, Direction direction) throws GameActionException {
@@ -80,19 +86,24 @@ public abstract class Robot {
 
     MapLocation orderLocation = order.getLocation();
 
+    if (rc.canSenseLocation(orderLocation)) {
+      RobotInfo robot = rc.senseRobotAtLocation(orderLocation);
+
+      if (robot != null && robot.getTeam() == enemyTeam) {
+        dispatchMessage(new OrderCanceledMessage(order.getId()));
+        removeOrder(order.getId());
+        return tryCompleteOrder();
+      }
+    }
+
     if (!isAdjacentTo(orderLocation)) {
       return false;
     }
 
     if (tryBuildRobot(order.getRobotType(), directionTowards(orderLocation))) {
-      dispatchMessage(new RemoveOrderMessage(order.getId()));
+      dispatchMessage(new OrderCompletedMessage(order.getId()));
+      removeOrder(order.getId());
       return true;
-    } else {
-      RobotInfo blockingRobot = rc.senseRobotAtLocation(orderLocation);
-
-      if (blockingRobot.getTeam() == enemyTeam) {
-        dispatchMessage(new RemoveOrderMessage(order.getId()));
-      }
     }
 
     return false;
@@ -175,5 +186,9 @@ public abstract class Robot {
 
   public MessageDispatcher getMessageDispatcher() {
     return messageDispatcher;
+  }
+
+  private void removeOrder(int id) {
+    orders.removeIf(order -> order.getId() == id);
   }
 }

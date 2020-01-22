@@ -3,6 +3,7 @@ package camel_case.robot;
 import battlecode.common.*;
 import camel_case.message.Message;
 import camel_case.message.MessageDispatcher;
+import camel_case.util.Color;
 
 public abstract class Robot {
   protected RobotController rc;
@@ -84,6 +85,18 @@ public abstract class Robot {
         && location.x < rc.getMapWidth()
         && location.y >= 0
         && location.y < rc.getMapHeight();
+  }
+
+  protected void drawLine(MapLocation from, MapLocation to, Color color) {
+    rc.setIndicatorLine(from, to, color.getR(), color.getG(), color.getB());
+  }
+
+  protected void drawLine(MapLocation to, Color color) {
+    drawLine(rc.getLocation(), to, color);
+  }
+
+  protected void drawDot(MapLocation location, Color color) {
+    rc.setIndicatorDot(location, color.getR(), color.getG(), color.getB());
   }
 
   public void dispatchMessage(Message message) {

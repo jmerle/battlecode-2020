@@ -3,8 +3,13 @@ package camel_case.robot;
 import battlecode.common.*;
 import camel_case.message.Message;
 import camel_case.message.MessageDispatcher;
+import camel_case.message.impl.OrderMessage;
+import camel_case.message.impl.RemoveOrderMessage;
 import camel_case.message.impl.SoupNearbyMessage;
 import camel_case.util.Color;
+
+import java.util.Comparator;
+import java.util.PriorityQueue;
 
 public abstract class Robot {
   protected RobotController rc;
@@ -26,6 +31,9 @@ public abstract class Robot {
     Direction.NORTHWEST
   };
 
+  protected PriorityQueue<OrderMessage> orders =
+      new PriorityQueue<>(Comparator.comparingInt(OrderMessage::getId));
+
   public Robot(RobotController rc, RobotType type) {
     this.rc = rc;
 
@@ -38,12 +46,53 @@ public abstract class Robot {
 
   public abstract void run() throws GameActionException;
 
-  public void onMessage(SoupNearbyMessage message) {}
+  public void onMessage(SoupNearbyMessage message) {
+    // Let implementations override this
+  }
+
+  public void onMessage(OrderMessage message) {
+    orders.add(message);
+  }
+
+  public void onMessage(RemoveOrderMessage message) {
+    orders.removeIf(order -> order.getId() == message.getId());
+  }
 
   protected boolean tryBuildRobot(RobotType type, Direction direction) throws GameActionException {
     if (rc.canBuildRobot(type, direction)) {
       rc.buildRobot(type, direction);
       return true;
+    }
+
+    return false;
+  }
+
+  protected boolean tryCompleteOrder() throws GameActionException {
+    OrderMessage order = orders.peek();
+
+    if (order == null) {
+      return false;
+    }
+
+    if (order.getRobotType().cost > rc.getTeamSoup()) {
+      return false;
+    }
+
+    MapLocation orderLocation = order.getLocation();
+
+    if (!isAdjacentTo(orderLocation)) {
+      return false;
+    }
+
+    if (tryBuildRobot(order.getRobotType(), directionTowards(orderLocation))) {
+      dispatchMessage(new RemoveOrderMessage(order.getId()));
+      return true;
+    } else {
+      RobotInfo blockingRobot = rc.senseRobotAtLocation(orderLocation);
+
+      if (blockingRobot.getTeam() == enemyTeam) {
+        dispatchMessage(new RemoveOrderMessage(order.getId()));
+      }
     }
 
     return false;

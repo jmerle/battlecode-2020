@@ -4,6 +4,8 @@ import battlecode.common.GameActionException;
 import battlecode.common.RobotController;
 import battlecode.common.Transaction;
 import camel_case.GeneratedData;
+import camel_case.message.impl.OrderMessage;
+import camel_case.message.impl.RemoveOrderMessage;
 import camel_case.message.impl.SoupNearbyMessage;
 import camel_case.robot.Robot;
 
@@ -117,6 +119,12 @@ public class MessageDispatcher {
         switch (messageTypes[typeIndex - 1]) {
           case SOUP_NEARBY:
             robot.onMessage(new SoupNearbyMessage(data));
+            break;
+          case ORDER:
+            robot.onMessage(new OrderMessage(data));
+            break;
+          case REMOVE_ORDER:
+            robot.onMessage(new RemoveOrderMessage(data));
             break;
         }
       }

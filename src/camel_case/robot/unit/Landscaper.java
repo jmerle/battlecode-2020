@@ -18,6 +18,10 @@ public class Landscaper extends Unit {
 
     // TODO(jmerle): Implement action logic
 
+    if (tryCompleteOrder()) {
+      return;
+    }
+
     tryMoveRandom();
   }
 

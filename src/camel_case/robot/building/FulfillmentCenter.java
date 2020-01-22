@@ -16,5 +16,7 @@ public class FulfillmentCenter extends Building {
     if (!rc.isReady()) return;
 
     // TODO(jmerle): Implement action logic
+
+    tryCompleteOrder();
   }
 }

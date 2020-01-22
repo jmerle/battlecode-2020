@@ -17,6 +17,7 @@ public class Miner extends Unit {
   private Set<MapLocation> invalidSoupLocations = new HashSet<>();
 
   private Set<MapLocation> interestingLocations = new HashSet<>();
+  private Set<MapLocation> invalidInterestingLocations = new HashSet<>();
   private int soupNearbyMessageCooldown = 0;
 
   private MapLocation[] wanderTargets;
@@ -54,6 +55,10 @@ public class Miner extends Unit {
 
     if (!rc.isReady()) return;
 
+    if (tryCompleteOrder()) {
+      return;
+    }
+
     if (rc.getSoupCarrying() == me.soupLimit) {
       if (!tryDepositSoup()) {
         tryMoveToDropOff();
@@ -79,7 +84,11 @@ public class Miner extends Unit {
 
   @Override
   public void onMessage(SoupNearbyMessage message) {
-    interestingLocations.add(message.getLocation());
+    MapLocation location = message.getLocation();
+
+    if (!invalidInterestingLocations.contains(location)) {
+      interestingLocations.add(location);
+    }
   }
 
   private MapLocation senseHQ() {
@@ -104,6 +113,7 @@ public class Miner extends Unit {
 
       if (soupLocations.add(soupLocation) && soupNearbyMessageCooldown == 0) {
         dispatchMessage(new SoupNearbyMessage(rc.getLocation()));
+        invalidInterestingLocations.add(rc.getLocation());
         soupNearbyMessageCooldown = 100;
       }
     }
@@ -168,11 +178,13 @@ public class Miner extends Unit {
 
     if (rc.getLocation().equals(closestLocation)) {
       interestingLocations.remove(closestLocation);
+      invalidInterestingLocations.add(closestLocation);
       return tryMoveTowardsInterestingLocation();
     }
 
     if (currentTarget.equals(closestLocation) && isStuck()) {
       interestingLocations.remove(closestLocation);
+      invalidInterestingLocations.add(closestLocation);
       return tryMoveTowardsInterestingLocation();
     }
 

@@ -4,6 +4,8 @@ import battlecode.common.Direction;
 import battlecode.common.GameActionException;
 import battlecode.common.RobotController;
 import battlecode.common.RobotType;
+import camel_case.message.impl.OrderMessage;
+import camel_case.util.Color;
 
 public class HQ extends Building {
   private int minersSpawned = 0;
@@ -14,9 +16,15 @@ public class HQ extends Building {
 
   @Override
   public void run() throws GameActionException {
-    // TODO(jmerle): Implement non-action logic
+    for (OrderMessage order : orders) {
+      drawDot(order.getLocation(), Color.GREEN);
+    }
 
     if (!rc.isReady()) return;
+
+    if (tryShootEnemyDrone()) {
+      return;
+    }
 
     if (minersSpawned < 5) {
       if (trySpawnMiner()) {
@@ -28,7 +36,7 @@ public class HQ extends Building {
       return;
     }
 
-    tryShootEnemyDrone();
+    tryCompleteOrder();
   }
 
   private boolean trySpawnMiner() throws GameActionException {

@@ -1,6 +1,7 @@
 package camel_case.robot.unit;
 
 import battlecode.common.*;
+import camel_case.message.impl.OrderMessage;
 import camel_case.robot.Robot;
 import camel_case.util.BetterRandom;
 import camel_case.util.Color;
@@ -18,6 +19,16 @@ public abstract class Unit extends Robot {
 
   public Unit(RobotController rc, RobotType type) {
     super(rc, type);
+  }
+
+  @Override
+  protected boolean tryCompleteOrder() throws GameActionException {
+    if (super.tryCompleteOrder()) {
+      return true;
+    }
+
+    OrderMessage order = orders.peek();
+    return order != null && tryMoveTo(order.getLocation());
   }
 
   protected boolean isStuck() {

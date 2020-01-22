@@ -4,6 +4,7 @@ import battlecode.common.GameActionException;
 import battlecode.common.RobotController;
 import battlecode.common.Transaction;
 import camel_case.GeneratedData;
+import camel_case.message.impl.SoupNearbyMessage;
 import camel_case.robot.Robot;
 
 import java.util.ArrayDeque;
@@ -20,7 +21,7 @@ public class MessageDispatcher {
   private int totalCost = 0;
   private int messageCount = 0;
 
-  private int lastHandledRound = 0;
+  private int lastHandledRound;
 
   private double secret1 = GeneratedData.MESSAGE_HASH_SECRET_1;
   private double secret2 = GeneratedData.MESSAGE_HASH_SECRET_2;
@@ -31,6 +32,8 @@ public class MessageDispatcher {
   public MessageDispatcher(RobotController rc, Robot robot) {
     this.rc = rc;
     this.robot = robot;
+
+    lastHandledRound = rc.getRoundNum() - 1;
 
     secret4 = rc.getTeam().ordinal() + 1;
     secret5 = rc.getMapWidth();
@@ -112,7 +115,9 @@ public class MessageDispatcher {
         }
 
         switch (messageTypes[typeIndex - 1]) {
-            // TODO(jmerle): Add message types
+          case SOUP_NEARBY:
+            robot.onMessage(new SoupNearbyMessage(data));
+            break;
         }
       }
     }

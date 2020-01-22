@@ -3,9 +3,10 @@ package camel_case.robot.unit;
 import battlecode.common.*;
 import camel_case.robot.Robot;
 import camel_case.util.BetterRandom;
+import camel_case.util.Color;
 
 public abstract class Unit extends Robot {
-  private MapLocation currentTarget;
+  protected MapLocation currentTarget;
 
   private boolean isBugMoving;
   private int distanceBeforeBugMoving;
@@ -20,13 +21,22 @@ public abstract class Unit extends Robot {
   }
 
   protected boolean isStuck() {
-    return turnsSpentMovingTowardsTarget > distanceToTarget * 2;
+    return turnsSpentMovingTowardsTarget > distanceToTarget * 1.5;
   }
 
   protected boolean tryMove(Direction direction) throws GameActionException {
     if (rc.canMove(direction)) {
       if (me.canFly() || !rc.senseFlooding(rc.adjacentLocation(direction))) {
         rc.move(direction);
+
+        if (currentTarget != null) {
+          drawLine(currentTarget, Color.YELLOW);
+        }
+
+        if (lastHuggedWall != null) {
+          drawDot(lastHuggedWall, Color.RED);
+        }
+
         return true;
       }
     }
@@ -35,13 +45,17 @@ public abstract class Unit extends Robot {
   }
 
   protected boolean tryMoveRandom() throws GameActionException {
+    currentTarget = null;
     return tryMove(adjacentDirections[BetterRandom.nextInt(adjacentDirections.length)]);
   }
 
   protected boolean tryMoveTo(MapLocation target) throws GameActionException {
     if (!target.equals(currentTarget)) {
       currentTarget = target;
+
       isBugMoving = false;
+      lastHuggedWall = null;
+
       distanceToTarget = (int) Math.ceil(Math.sqrt(rc.getLocation().distanceSquaredTo(target)));
       turnsSpentMovingTowardsTarget = 1;
     } else {
@@ -52,6 +66,7 @@ public abstract class Unit extends Robot {
       if (rc.getLocation().distanceSquaredTo(currentTarget) < distanceBeforeBugMoving) {
         if (tryMove(directionTowards(currentTarget))) {
           isBugMoving = false;
+          lastHuggedWall = null;
           return true;
         }
       }
@@ -70,10 +85,12 @@ public abstract class Unit extends Robot {
   }
 
   private void determineBugMoveDirection() {
-    Direction left = directionTowards(currentTarget).rotateLeft();
+    Direction forward = directionTowards(currentTarget);
+
+    Direction left = forward.rotateLeft();
     int leftDistance = Integer.MAX_VALUE;
 
-    Direction right = directionTowards(currentTarget).rotateRight();
+    Direction right = forward.rotateRight();
     int rightDistance = Integer.MAX_VALUE;
 
     for (int i = 0; i < 8; i++) {

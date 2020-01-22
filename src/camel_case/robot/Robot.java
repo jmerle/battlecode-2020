@@ -3,6 +3,7 @@ package camel_case.robot;
 import battlecode.common.*;
 import camel_case.message.Message;
 import camel_case.message.MessageDispatcher;
+import camel_case.message.impl.SoupNearbyMessage;
 import camel_case.util.Color;
 
 public abstract class Robot {
@@ -36,6 +37,8 @@ public abstract class Robot {
   }
 
   public abstract void run() throws GameActionException;
+
+  public void onMessage(SoupNearbyMessage message) {}
 
   protected boolean tryBuildRobot(RobotType type, Direction direction) throws GameActionException {
     if (rc.canBuildRobot(type, direction)) {
@@ -85,6 +88,24 @@ public abstract class Robot {
         && location.x < rc.getMapWidth()
         && location.y >= 0
         && location.y < rc.getMapHeight();
+  }
+
+  protected MapLocation getClosestLocation(Iterable<MapLocation> locations) {
+    MapLocation bestLocation = null;
+    int bestDistance = Integer.MAX_VALUE;
+
+    MapLocation myLocation = rc.getLocation();
+
+    for (MapLocation location : locations) {
+      int distance = myLocation.distanceSquaredTo(location);
+
+      if (distance < bestDistance) {
+        bestLocation = location;
+        bestDistance = distance;
+      }
+    }
+
+    return bestLocation;
   }
 
   protected void drawLine(MapLocation from, MapLocation to, Color color) {

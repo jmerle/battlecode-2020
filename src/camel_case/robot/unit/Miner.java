@@ -1,17 +1,17 @@
 package camel_case.robot.unit;
 
 import battlecode.common.*;
-import camel_case.message.impl.SoupNearbyMessage;
+import camel_case.message.impl.*;
 import camel_case.util.BetterRandom;
 import camel_case.util.Color;
 
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 public class Miner extends Unit {
-  private List<MapLocation> dropOffLocations = new ArrayList<>();
+  private MapLocation hq;
+
+  private Set<MapLocation> dropOffLocations = new HashSet<>();
 
   private Set<MapLocation> soupLocations = new HashSet<>();
   private Set<MapLocation> invalidSoupLocations = new HashSet<>();
@@ -22,6 +22,8 @@ public class Miner extends Unit {
 
   private MapLocation[] wanderTargets;
   private int currentWanderTarget;
+
+  private boolean canBuildRefineries = false;
 
   public Miner(RobotController rc) {
     super(rc, RobotType.MINER);
@@ -44,9 +46,11 @@ public class Miner extends Unit {
 
   @Override
   public void run() throws GameActionException {
-    // TODO(jmerle): Building refineries when necessary, replacing the HQ drop off location
+    if (hq == null) {
+      hq = senseHQ();
+    }
 
-    if (dropOffLocations.isEmpty()) {
+    if (dropOffLocations.isEmpty() && !canBuildRefineries) {
       dropOffLocations.add(senseHQ());
     }
 
@@ -90,6 +94,26 @@ public class Miner extends Unit {
     }
   }
 
+  @Override
+  public void onMessage(OrderCompletedMessage message) {
+    OrderMessage order = getOrder(message.getId());
+
+    if (order != null && order.getRobotType() == RobotType.REFINERY) {
+      if (dropOffLocations.size() == 1 && dropOffLocations.contains(hq)) {
+        dropOffLocations.clear();
+      }
+
+      dropOffLocations.add(order.getLocation());
+    }
+
+    super.onMessage(message);
+  }
+
+  @Override
+  public void onMessage(AllMinersSpawnedMessage message) {
+    canBuildRefineries = true;
+  }
+
   private MapLocation senseHQ() {
     for (RobotInfo robot : rc.senseNearbyRobots(-1, myTeam)) {
       if (robot.getType() == RobotType.HQ) {
@@ -118,6 +142,44 @@ public class Miner extends Unit {
     }
   }
 
+  private boolean tryCompleteOrder() throws GameActionException {
+    OrderMessage order = orders.peek();
+
+    if (order == null) {
+      return false;
+    }
+
+    if (order.getRobotType().cost > rc.getTeamSoup()) {
+      return false;
+    }
+
+    MapLocation orderLocation = order.getLocation();
+
+    if (rc.canSenseLocation(orderLocation)) {
+      RobotInfo robot = rc.senseRobotAtLocation(orderLocation);
+
+      if (robot != null && robot.getTeam() == enemyTeam) {
+        dispatchMessage(new OrderCanceledMessage(order.getId()));
+        return tryCompleteOrder();
+      }
+    }
+
+    if (rc.getLocation().equals(orderLocation)) {
+      return tryMoveRandom();
+    }
+
+    if (!isAdjacentTo(orderLocation)) {
+      return tryMoveTo(orderLocation);
+    }
+
+    if (tryBuildRobot(order.getRobotType(), directionTowards(orderLocation))) {
+      dispatchMessage(new OrderCompletedMessage(order.getId()));
+      return true;
+    }
+
+    return false;
+  }
+
   private boolean tryDepositSoup() throws GameActionException {
     for (Direction direction : adjacentDirections) {
       if (rc.canDepositSoup(direction)) {
@@ -133,8 +195,30 @@ public class Miner extends Unit {
   private void tryMoveToDropOff() throws GameActionException {
     MapLocation bestDropOff = getClosestLocation(dropOffLocations);
 
-    if (bestDropOff != null) {
+    if ((canBuildRefineries && dropOffLocations.size() == 1 && dropOffLocations.contains(hq))
+        || rc.getLocation().distanceSquaredTo(bestDropOff) > 50) {
+      tryBuildRefinery();
+    } else {
       tryMoveTo(bestDropOff);
+    }
+  }
+
+  private void tryBuildRefinery() throws GameActionException {
+    for (OrderMessage order : orders) {
+      if (order.getRobotType() == RobotType.REFINERY) {
+        return;
+      }
+    }
+
+    MapLocation hq = senseHQ();
+
+    for (Direction direction : adjacentDirections) {
+      MapLocation location = rc.adjacentLocation(direction);
+
+      if (canDispatchOrderAt(location, hq, 3)) {
+        dispatchMessage(new OrderMessage(1, RobotType.REFINERY, location));
+        return;
+      }
     }
   }
 
@@ -181,7 +265,7 @@ public class Miner extends Unit {
       return tryMoveTowardsInterestingLocation();
     }
 
-    if (currentTarget.equals(closestLocation) && isStuck()) {
+    if (closestLocation.equals(currentTarget) && isStuck()) {
       interestingLocations.remove(closestLocation);
       invalidInterestingLocations.add(closestLocation);
       return tryMoveTowardsInterestingLocation();

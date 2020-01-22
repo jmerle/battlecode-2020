@@ -21,16 +21,6 @@ public abstract class Unit extends Robot {
     super(rc, type);
   }
 
-  @Override
-  protected boolean tryCompleteOrder() throws GameActionException {
-    if (super.tryCompleteOrder()) {
-      return true;
-    }
-
-    OrderMessage order = orders.peek();
-    return order != null && tryMoveTo(order.getLocation());
-  }
-
   protected boolean isStuck() {
     return turnsSpentMovingTowardsTarget > distanceToTarget * 1.5;
   }

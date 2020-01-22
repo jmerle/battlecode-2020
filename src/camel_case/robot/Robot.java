@@ -3,10 +3,7 @@ package camel_case.robot;
 import battlecode.common.*;
 import camel_case.message.Message;
 import camel_case.message.MessageDispatcher;
-import camel_case.message.impl.OrderCanceledMessage;
-import camel_case.message.impl.OrderCompletedMessage;
-import camel_case.message.impl.OrderMessage;
-import camel_case.message.impl.SoupNearbyMessage;
+import camel_case.message.impl.*;
 import camel_case.util.Color;
 
 import java.util.Comparator;
@@ -64,6 +61,10 @@ public abstract class Robot {
     removeOrder(message.getId());
   }
 
+  public void onMessage(AllMinersSpawnedMessage message) {
+    // Let implementations override this
+  }
+
   protected boolean tryBuildRobot(RobotType type, Direction direction) throws GameActionException {
     if (rc.canBuildRobot(type, direction)) {
       rc.buildRobot(type, direction);
@@ -73,40 +74,38 @@ public abstract class Robot {
     return false;
   }
 
-  protected boolean tryCompleteOrder() throws GameActionException {
-    OrderMessage order = orders.peek();
-
-    if (order == null) {
-      return false;
-    }
-
-    if (order.getRobotType().cost > rc.getTeamSoup()) {
-      return false;
-    }
-
-    MapLocation orderLocation = order.getLocation();
-
-    if (rc.canSenseLocation(orderLocation)) {
-      RobotInfo robot = rc.senseRobotAtLocation(orderLocation);
-
-      if (robot != null && robot.getTeam() == enemyTeam) {
-        dispatchMessage(new OrderCanceledMessage(order.getId()));
-        removeOrder(order.getId());
-        return tryCompleteOrder();
+  protected OrderMessage getOrder(int id) {
+    for (OrderMessage order : orders) {
+      if (order.getId() == id) {
+        return order;
       }
     }
 
-    if (!isAdjacentTo(orderLocation)) {
+    return null;
+  }
+
+  protected void removeOrder(int id) {
+    orders.removeIf(order -> order.getId() == id);
+  }
+
+  protected boolean canDispatchOrderAt(
+      MapLocation location, MapLocation hq, int maxElevationDifference) throws GameActionException {
+    if (hq != null && isAdjacentTo(location, hq)) {
       return false;
     }
 
-    if (tryBuildRobot(order.getRobotType(), directionTowards(orderLocation))) {
-      dispatchMessage(new OrderCompletedMessage(order.getId()));
-      removeOrder(order.getId());
-      return true;
+    if (rc.senseFlooding(location)) {
+      return false;
     }
 
-    return false;
+    int myElevation = rc.senseElevation(rc.getLocation());
+    int orderElevation = rc.senseElevation(location);
+
+    if (Math.abs(myElevation - orderElevation) > maxElevationDifference) {
+      return false;
+    }
+
+    return !rc.isLocationOccupied(location);
   }
 
   protected Direction directionTowards(MapLocation from, MapLocation to) {
@@ -125,7 +124,7 @@ public abstract class Robot {
     } else if (from.y < to.y) {
       return Direction.NORTH;
     } else if (from.y > to.y) {
-      return Direction.SOUTHWEST;
+      return Direction.SOUTH;
     } else {
       return Direction.CENTER;
     }
@@ -186,9 +185,5 @@ public abstract class Robot {
 
   public MessageDispatcher getMessageDispatcher() {
     return messageDispatcher;
-  }
-
-  private void removeOrder(int id) {
-    orders.removeIf(order -> order.getId() == id);
   }
 }

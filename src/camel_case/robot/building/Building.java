@@ -26,17 +26,32 @@ public abstract class Building extends Robot {
     RobotInfo[] nearbyEnemies =
         rc.senseNearbyRobots(GameConstants.NET_GUN_SHOOT_RADIUS_SQUARED, enemyTeam);
 
+    MapLocation myLocation = rc.getLocation();
+    int myX = myLocation.x;
+    int myY = myLocation.y;
+
     Arrays.sort(
         nearbyEnemies,
         Comparator.comparingInt(
             robot -> {
-              int distance = rc.getLocation().distanceSquaredTo(robot.getLocation());
+              int priority = 0;
 
               if (robot.isCurrentlyHoldingUnit()) {
-                return -1000 - distance;
+                priority += 1000;
               }
 
-              return -distance;
+              MapLocation robotLocation = robot.getLocation();
+
+              if (robotLocation.x == myX) {
+                priority += 2000;
+              }
+
+              if (robotLocation.y == myY) {
+                priority += 2000;
+              }
+
+              int distance = rc.getLocation().distanceSquaredTo(robot.getLocation());
+              return -priority + distance;
             }));
 
     for (RobotInfo robotInfo : nearbyEnemies) {

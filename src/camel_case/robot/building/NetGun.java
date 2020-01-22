@@ -13,10 +13,6 @@ public class NetGun extends Building {
   public void run() throws GameActionException {
     if (!rc.isReady()) return;
 
-    if (tryShootEnemyDrone()) {
-      return;
-    }
-
-    tryCompleteOrder();
+    tryShootEnemyDrone();
   }
 }

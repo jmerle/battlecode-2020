@@ -127,6 +127,9 @@ public class MessageDispatcher {
           case ORDER_CANCELED:
             robot.onMessage(new OrderCanceledMessage(data));
             break;
+          case ALL_MINERS_SPAWNED:
+            robot.onMessage(new AllMinersSpawnedMessage(data));
+            break;
         }
       }
     }

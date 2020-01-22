@@ -18,10 +18,6 @@ public class DeliveryDrone extends Unit {
 
     // TODO(jmerle): Implement action logic
 
-    if (tryCompleteOrder()) {
-      return;
-    }
-
     tryMoveRandom();
   }
 

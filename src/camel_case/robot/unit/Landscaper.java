@@ -23,17 +23,12 @@ public class Landscaper extends Unit {
       }
     }
 
-    if (rc.getDirtCarrying() < me.dirtLimit) {
-      tryDigDirt();
-      return;
-    }
-
-    if (rc.getDirtCarrying() == me.dirtLimit) {
+    if (rc.getDirtCarrying() > 0) {
       tryDepositDirt();
       return;
     }
 
-    tryMoveRandom();
+    tryDigDirt();
   }
 
   private MapLocation senseHQ() {

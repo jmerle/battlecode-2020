@@ -60,6 +60,10 @@ public abstract class Robot {
     removeOrder(message.getId());
   }
 
+  public void onMessage(RushMessage message) {
+    // Let implementations override this
+  }
+
   protected boolean tryBuildRobot(RobotType type, Direction direction) throws GameActionException {
     if (rc.canBuildRobot(type, direction)) {
       rc.buildRobot(type, direction);

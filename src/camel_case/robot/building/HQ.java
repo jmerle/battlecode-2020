@@ -4,12 +4,14 @@ import battlecode.common.*;
 import camel_case.GeneratedData;
 import camel_case.message.impl.OrderCanceledMessage;
 import camel_case.message.impl.OrderMessage;
+import camel_case.message.impl.RushMessage;
 import camel_case.util.Color;
 
 public class HQ extends Building {
   private int minersSpawned = 0;
 
   private boolean shouldBuildDesignSchool = false;
+  private boolean hasStartedRush = false;
 
   public HQ(RobotController rc) {
     super(rc, RobotType.HQ);
@@ -23,6 +25,10 @@ public class HQ extends Building {
 
     if (shouldBuildDesignSchool) {
       shouldBuildDesignSchool = !dispatchDesignSchoolOrder();
+    }
+
+    if (!hasStartedRush && minersSpawned > 0) {
+      hasStartedRush = startRush();
     }
 
     if (!rc.isReady()) return;
@@ -55,16 +61,6 @@ public class HQ extends Building {
     super.onMessage(message);
   }
 
-  private boolean trySpawnMiner() throws GameActionException {
-    for (Direction direction : adjacentDirections) {
-      if (tryBuildRobot(RobotType.MINER, direction)) {
-        return true;
-      }
-    }
-
-    return false;
-  }
-
   private boolean dispatchDesignSchoolOrder() throws GameActionException {
     MapLocation hq = rc.getLocation();
 
@@ -73,6 +69,27 @@ public class HQ extends Building {
 
       if (canDispatchOrderAt(location, hq, 6)) {
         dispatchMessage(new OrderMessage(0, RobotType.DESIGN_SCHOOL, location));
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  private boolean startRush() {
+    for (RobotInfo robot : rc.senseNearbyRobots(-1, myTeam)) {
+      if (robot.getType() == RobotType.MINER) {
+        dispatchMessage(new RushMessage(robot.getID()));
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  private boolean trySpawnMiner() throws GameActionException {
+    for (Direction direction : adjacentDirections) {
+      if (tryBuildRobot(RobotType.MINER, direction)) {
         return true;
       }
     }

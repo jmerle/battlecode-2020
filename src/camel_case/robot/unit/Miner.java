@@ -1,14 +1,13 @@
 package camel_case.robot.unit;
 
 import battlecode.common.*;
-import camel_case.message.impl.OrderCanceledMessage;
-import camel_case.message.impl.OrderCompletedMessage;
-import camel_case.message.impl.OrderMessage;
-import camel_case.message.impl.SoupNearbyMessage;
+import camel_case.message.impl.*;
 import camel_case.util.BetterRandom;
 import camel_case.util.Color;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 public class Miner extends Unit {
@@ -27,6 +26,8 @@ public class Miner extends Unit {
   private int currentWanderTarget;
 
   private boolean canBuildRefineries = false;
+
+  private List<MapLocation> possibleEnemyLocations = new ArrayList<>(9);
 
   public Miner(RobotController rc) {
     super(rc, RobotType.MINER);
@@ -67,6 +68,11 @@ public class Miner extends Unit {
     }
 
     if (!rc.isReady()) return;
+
+    if (!possibleEnemyLocations.isEmpty()) {
+      rush();
+      return;
+    }
 
     if (!dropOffLocations.contains(hq) && isAdjacentTo(hq)) {
       tryMoveRandom();
@@ -113,7 +119,9 @@ public class Miner extends Unit {
   public void onMessage(OrderCompletedMessage message) {
     OrderMessage order = getOrder(message.getId());
 
-    if (order != null && order.getRobotType() == RobotType.DESIGN_SCHOOL) {
+    if (order != null
+        && order.getRobotType() == RobotType.DESIGN_SCHOOL
+        && stepsTo(order.getLocation(), hq) == 2) {
       canBuildRefineries = true;
     }
 
@@ -126,6 +134,84 @@ public class Miner extends Unit {
     }
 
     super.onMessage(message);
+  }
+
+  @Override
+  public void onMessage(RushMessage message) {
+    if (rc.getID() == message.getId()) {
+      fillPossibleEnemyLocations();
+    }
+  }
+
+  private void fillPossibleEnemyLocations() {
+    int x = hq.x;
+    int y = hq.y;
+
+    int horizontalMiddle = rc.getMapWidth() / 2;
+    int verticalMiddle = rc.getMapHeight() / 2;
+
+    int horizontalOffset = horizontalMiddle - x;
+    int verticalOffset = verticalMiddle - y;
+
+    int xOffset = horizontalMiddle + horizontalOffset;
+    int yOffset = verticalMiddle + verticalOffset;
+
+    possibleEnemyLocations.add(new MapLocation(xOffset - 1, y));
+    possibleEnemyLocations.add(new MapLocation(xOffset, y));
+    possibleEnemyLocations.add(new MapLocation(xOffset + 1, y));
+
+    possibleEnemyLocations.add(new MapLocation(x, yOffset - 1));
+    possibleEnemyLocations.add(new MapLocation(x, yOffset));
+    possibleEnemyLocations.add(new MapLocation(x, yOffset + 1));
+
+    possibleEnemyLocations.add(new MapLocation(xOffset - 1, yOffset - 1));
+    possibleEnemyLocations.add(new MapLocation(xOffset, yOffset));
+    possibleEnemyLocations.add(new MapLocation(xOffset + 1, yOffset + 1));
+  }
+
+  private void rush() throws GameActionException {
+    if (possibleEnemyLocations.isEmpty()) {
+      return;
+    }
+
+    if (isStuck()) {
+      possibleEnemyLocations.remove(0);
+      rush();
+      return;
+    }
+
+    MapLocation targetLocation = possibleEnemyLocations.get(0);
+
+    if (rc.canSenseLocation(targetLocation)) {
+      RobotInfo robot = rc.senseRobotAtLocation(targetLocation);
+      if (robot == null || robot.getType() != RobotType.HQ || robot.getTeam() != enemyTeam) {
+        possibleEnemyLocations.remove(0);
+        rush();
+        return;
+      }
+
+      boolean canSenseAllDirections = true;
+      for (Direction direction : adjacentDirections) {
+        if (!rc.canSenseLocation(targetLocation.add(direction))) {
+          canSenseAllDirections = false;
+          break;
+        }
+      }
+
+      if (!canSenseAllDirections) {
+        tryMoveTo(targetLocation);
+        return;
+      }
+
+      MapLocation designSchoolLocation = rc.getLocation().add(directionTowards(targetLocation));
+      if (canDispatchOrderAt(designSchoolLocation, null, 3)) {
+        dispatchMessage(new OrderMessage(10, RobotType.DESIGN_SCHOOL, designSchoolLocation));
+      }
+
+      possibleEnemyLocations.clear();
+    }
+
+    tryMoveTo(targetLocation);
   }
 
   private void senseSoup() {

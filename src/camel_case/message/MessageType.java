@@ -6,4 +6,6 @@ public enum MessageType {
   ORDER,
   ORDER_COMPLETED,
   ORDER_CANCELED,
+
+  RUSH,
 }

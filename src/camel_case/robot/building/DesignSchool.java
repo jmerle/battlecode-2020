@@ -15,7 +15,7 @@ public class DesignSchool extends Building {
   @Override
   public void run() throws GameActionException {
     if (hq == null) {
-      hq = senseOwnRobot(RobotType.HQ);
+      hq = senseHQ();
     }
 
     if (hq == null) {
@@ -39,6 +39,27 @@ public class DesignSchool extends Building {
         }
       }
     }
+  }
+
+  private MapLocation senseHQ() {
+    MapLocation myHQ = null;
+    MapLocation enemyHQ = null;
+
+    for (RobotInfo robot : rc.senseNearbyRobots()) {
+      if (robot.getType() == RobotType.HQ) {
+        if (robot.getTeam() == myTeam) {
+          myHQ = robot.getLocation();
+        } else {
+          enemyHQ = robot.getLocation();
+        }
+      }
+    }
+
+    if (myHQ != null) {
+      return myHQ;
+    }
+
+    return enemyHQ;
   }
 
   private boolean trySpawnLandscaperTowards(MapLocation location) throws GameActionException {

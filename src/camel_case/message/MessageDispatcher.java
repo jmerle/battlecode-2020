@@ -132,6 +132,9 @@ public class MessageDispatcher {
           case ORDER_CANCELED:
             robot.onMessage(new OrderCanceledMessage(data));
             break;
+          case RUSH:
+            robot.onMessage(new RushMessage(data));
+            break;
         }
       }
     }

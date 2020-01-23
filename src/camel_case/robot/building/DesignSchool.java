@@ -34,16 +34,14 @@ public class DesignSchool extends Building {
 
     if (!isLocationSurrounded(hq)) {
       if (landscapersSpawned < requiredInRingOne) {
-        if (trySpawnMinerTowards(hq)) {
+        if (trySpawnLandscaperTowards(hq)) {
           landscapersSpawned++;
         }
       }
-
-      return;
     }
   }
 
-  private boolean trySpawnMinerTowards(MapLocation location) throws GameActionException {
+  private boolean trySpawnLandscaperTowards(MapLocation location) throws GameActionException {
     Direction forward = directionTowards(location);
 
     if (tryBuildRobot(RobotType.LANDSCAPER, forward)) {

@@ -9,6 +9,8 @@ public class Landscaper extends Unit {
   private MapLocation hq;
   private MapLocation designSchool;
 
+  private boolean isEnemyHQ;
+
   public Landscaper(RobotController rc) {
     super(rc, RobotType.LANDSCAPER);
   }
@@ -16,7 +18,7 @@ public class Landscaper extends Unit {
   @Override
   public void run() throws GameActionException {
     if (hq == null) {
-      hq = senseOwnRobot(RobotType.HQ);
+      senseHQ();
     }
 
     if (designSchool == null) {
@@ -50,6 +52,29 @@ public class Landscaper extends Unit {
     }
 
     tryDigDirt();
+  }
+
+  private void senseHQ() {
+    RobotInfo myHQ = null;
+    RobotInfo enemyHQ = null;
+
+    for (RobotInfo robot : rc.senseNearbyRobots()) {
+      if (robot.getType() == RobotType.HQ) {
+        if (robot.getTeam() == myTeam) {
+          myHQ = robot;
+        } else {
+          enemyHQ = robot;
+        }
+      }
+    }
+
+    if (myHQ != null) {
+      hq = myHQ.getLocation();
+      isEnemyHQ = false;
+    } else if (enemyHQ != null) {
+      hq = enemyHQ.getLocation();
+      isEnemyHQ = true;
+    }
   }
 
   private boolean tryDigDirt(Direction direction) throws GameActionException {
@@ -130,6 +155,11 @@ public class Landscaper extends Unit {
   }
 
   private void tryDepositDirt() throws GameActionException {
+    if (isEnemyHQ) {
+      tryDepositDirt(directionTowards(hq));
+      return;
+    }
+
     Direction bestDirection = Direction.CENTER;
     int bestElevation = rc.senseElevation(rc.getLocation());
 

@@ -1,7 +1,6 @@
 package camel_case.robot.unit;
 
 import battlecode.common.*;
-import camel_case.message.impl.OrderMessage;
 import camel_case.robot.Robot;
 import camel_case.util.BetterRandom;
 import camel_case.util.Color;

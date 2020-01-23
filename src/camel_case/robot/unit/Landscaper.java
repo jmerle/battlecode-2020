@@ -1,6 +1,7 @@
 package camel_case.robot.unit;
 
 import battlecode.common.*;
+import camel_case.util.Color;
 
 public class Landscaper extends Unit {
   MapLocation hq;
@@ -31,18 +32,9 @@ public class Landscaper extends Unit {
     tryDigDirt();
   }
 
-  private MapLocation senseHQ() {
-    for (RobotInfo robot : rc.senseNearbyRobots(-1, myTeam)) {
-      if (robot.getType() == RobotType.HQ) {
-        return robot.getLocation();
-      }
-    }
-
-    return null;
-  }
-
   private boolean tryDigDirt(Direction direction) throws GameActionException {
     if (rc.canDigDirt(direction)) {
+      drawLine(rc.adjacentLocation(direction), Color.GREEN);
       rc.digDirt(direction);
       return true;
     }
@@ -105,6 +97,12 @@ public class Landscaper extends Unit {
         bestDirection = direction;
         bestSoup = soup;
       }
+    }
+
+    if (bestDirection == Direction.CENTER) {
+      drawDot(myLocation, Color.BLUE);
+    } else {
+      drawLine(rc.adjacentLocation(bestDirection), Color.BLUE);
     }
 
     rc.depositDirt(bestDirection);

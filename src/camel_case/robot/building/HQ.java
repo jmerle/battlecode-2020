@@ -27,7 +27,7 @@ public class HQ extends Building {
       shouldBuildDesignSchool = !dispatchDesignSchoolOrder();
     }
 
-    if (!hasDispatchedNetGunOrders && canDispatchNetGunOrders()) {
+    if (!hasDispatchedNetGunOrders && isHQSurrounded(rc.getLocation())) {
       dispatchNetGunOrders();
       hasDispatchedNetGunOrders = true;
     }
@@ -86,16 +86,6 @@ public class HQ extends Building {
     }
 
     return false;
-  }
-
-  private boolean canDispatchNetGunOrders() throws GameActionException {
-    for (Direction direction : adjacentDirections) {
-      if (!rc.isLocationOccupied(rc.adjacentLocation(direction))) {
-        return false;
-      }
-    }
-
-    return true;
   }
 
   private void dispatchNetGunOrders() throws GameActionException {

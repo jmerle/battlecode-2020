@@ -5,9 +5,9 @@ package camel_case;
  * manually is useless, they are automatically replaced on every build.
  */
 public class GeneratedData {
-  public static final int MESSAGE_HASH_SECRET_1 = -173;
-  public static final int MESSAGE_HASH_SECRET_2 = -89;
-  public static final int MESSAGE_HASH_SECRET_3 = -158;
+  public static final int MESSAGE_HASH_SECRET_1 = 155;
+  public static final int MESSAGE_HASH_SECRET_2 = 34;
+  public static final int MESSAGE_HASH_SECRET_3 = -84;
 
   public static final int[][] RING_1_OFFSETS = {{-1, 1}, {0, 1}, {1, 1}, {1, 0}, {1, -1}, {0, -1}, {-1, -1}, {-1, 0}};
   public static final int[][] RING_2_OFFSETS = {{-2, 2}, {-1, 2}, {0, 2}, {1, 2}, {2, 2}, {2, 1}, {2, 0}, {2, -1}, {2, -2}, {1, -2}, {0, -2}, {-1, -2}, {-2, -2}, {-2, -1}, {-2, 0}, {-2, 1}};

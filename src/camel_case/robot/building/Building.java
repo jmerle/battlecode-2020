@@ -62,4 +62,20 @@ public abstract class Building extends Robot {
 
     return false;
   }
+
+  protected boolean isHQSurrounded(MapLocation hq) throws GameActionException {
+    for (Direction direction : adjacentDirections) {
+      RobotInfo robot = rc.senseRobotAtLocation(hq.add(direction));
+
+      if (robot == null) {
+        return false;
+      }
+
+      if (robot.getTeam() == myTeam && rc.getType() != RobotType.LANDSCAPER) {
+        return false;
+      }
+    }
+
+    return true;
+  }
 }

@@ -121,16 +121,6 @@ public class Miner extends Unit {
     canBuildRefineries = true;
   }
 
-  private MapLocation senseHQ() {
-    for (RobotInfo robot : rc.senseNearbyRobots(-1, myTeam)) {
-      if (robot.getType() == RobotType.HQ) {
-        return robot.getLocation();
-      }
-    }
-
-    return null;
-  }
-
   private void senseSoup() {
     if (soupNearbyMessageCooldown > 0) {
       soupNearbyMessageCooldown--;

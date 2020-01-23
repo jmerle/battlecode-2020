@@ -31,7 +31,7 @@ public abstract class Robot {
   };
 
   protected PriorityQueue<OrderMessage> orders =
-    new PriorityQueue<>(Comparator.comparingInt(OrderMessage::getId));
+      new PriorityQueue<>(Comparator.comparingInt(OrderMessage::getId));
 
   public Robot(RobotController rc, RobotType type) {
     this.rc = rc;
@@ -99,7 +99,7 @@ public abstract class Robot {
   }
 
   protected boolean canDispatchOrderAt(
-    MapLocation location, MapLocation hq, int maxElevationDifference) throws GameActionException {
+      MapLocation location, MapLocation hq, int maxElevationDifference) throws GameActionException {
     if (!isOnTheMap(location)) {
       return false;
     }
@@ -130,6 +130,16 @@ public abstract class Robot {
     }
 
     return !robot.getType().isBuilding();
+  }
+
+  protected MapLocation senseHQ() {
+    for (RobotInfo robot : rc.senseNearbyRobots(-1, myTeam)) {
+      if (robot.getType() == RobotType.HQ) {
+        return robot.getLocation();
+      }
+    }
+
+    return null;
   }
 
   protected Direction directionTowards(MapLocation from, MapLocation to) {
@@ -178,9 +188,9 @@ public abstract class Robot {
 
   protected boolean isOnTheMap(MapLocation location) {
     return location.x >= 0
-      && location.x < rc.getMapWidth()
-      && location.y >= 0
-      && location.y < rc.getMapHeight();
+        && location.x < rc.getMapWidth()
+        && location.y >= 0
+        && location.y < rc.getMapHeight();
   }
 
   protected MapLocation getClosestLocation(Iterable<MapLocation> locations) {

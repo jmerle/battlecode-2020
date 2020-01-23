@@ -166,17 +166,21 @@ public class Miner extends Unit {
 
     MapLocation orderLocation = order.getLocation();
 
+    if (rc.getLocation().equals(orderLocation)) {
+      return tryMoveRandom();
+    }
+
     if (rc.canSenseLocation(orderLocation)) {
       RobotInfo robot = rc.senseRobotAtLocation(orderLocation);
 
-      if (robot != null && (robot.getTeam() == enemyTeam || robot.getType().isBuilding())) {
-        dispatchMessage(new OrderCanceledMessage(order.getId()));
+      if (robot != null) {
+        if (robot.getTeam() == enemyTeam
+            || (robot.getType().isBuilding() && robot.getType() != order.getRobotType())) {
+          dispatchMessage(new OrderCanceledMessage(order.getId()));
+        }
+
         return false;
       }
-    }
-
-    if (rc.getLocation().equals(orderLocation)) {
-      return tryMoveRandom();
     }
 
     if (!isAdjacentTo(orderLocation)) {
@@ -208,9 +212,11 @@ public class Miner extends Unit {
   private void tryMoveToDropOff() throws GameActionException {
     MapLocation bestDropOff = getClosestLocation(dropOffLocations);
 
-    if ((canBuildRefineries && dropOffLocations.size() == 1 && dropOffLocations.contains(hq))
-        || rc.getLocation().distanceSquaredTo(bestDropOff) > 50) {
+    if (canBuildRefineries && dropOffLocations.size() == 1 && dropOffLocations.contains(hq)) {
       tryBuildRefinery();
+    } else if (stepsTo(bestDropOff) > 5) {
+      tryBuildRefinery();
+      return;
     }
 
     tryMoveTo(bestDropOff);

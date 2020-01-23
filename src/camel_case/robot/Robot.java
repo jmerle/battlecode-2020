@@ -162,6 +162,16 @@ public abstract class Robot {
     return isAdjacentTo(rc.getLocation(), location);
   }
 
+  protected int stepsTo(MapLocation from, MapLocation to) {
+    int dx = Math.abs(from.x - to.x);
+    int dy = Math.abs(from.y - to.y);
+    return (dx + dy) - Math.min(dx, dy);
+  }
+
+  protected int stepsTo(MapLocation to) {
+    return stepsTo(rc.getLocation(), to);
+  }
+
   protected boolean isOnTheMap(MapLocation location) {
     return location.x >= 0
         && location.x < rc.getMapWidth()

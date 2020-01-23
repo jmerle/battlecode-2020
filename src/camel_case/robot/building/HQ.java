@@ -11,6 +11,7 @@ public class HQ extends Building {
   private int minersSpawned = 0;
 
   private boolean shouldBuildDesignSchool = false;
+  private boolean hasDispatchedNetGunOrders = false;
 
   public HQ(RobotController rc) {
     super(rc, RobotType.HQ);
@@ -24,6 +25,11 @@ public class HQ extends Building {
 
     if (shouldBuildDesignSchool) {
       shouldBuildDesignSchool = !dispatchDesignSchoolOrder();
+    }
+
+    if (!hasDispatchedNetGunOrders && canDispatchNetGunOrders()) {
+      dispatchNetGunOrders();
+      hasDispatchedNetGunOrders = true;
     }
 
     if (!rc.isReady()) return;
@@ -42,7 +48,6 @@ public class HQ extends Building {
       if (minersSpawned == 5) {
         dispatchMessage(new AllMinersSpawnedMessage());
         shouldBuildDesignSchool = !dispatchDesignSchoolOrder();
-        dispatchNetGunOrders();
       }
     }
   }
@@ -81,6 +86,16 @@ public class HQ extends Building {
     }
 
     return false;
+  }
+
+  private boolean canDispatchNetGunOrders() throws GameActionException {
+    for (Direction direction : adjacentDirections) {
+      if (!rc.isLocationOccupied(rc.adjacentLocation(direction))) {
+        return false;
+      }
+    }
+
+    return true;
   }
 
   private void dispatchNetGunOrders() throws GameActionException {

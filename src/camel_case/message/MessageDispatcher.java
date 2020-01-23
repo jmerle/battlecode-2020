@@ -1,6 +1,7 @@
 package camel_case.message;
 
 import battlecode.common.GameActionException;
+import battlecode.common.GameConstants;
 import battlecode.common.RobotController;
 import battlecode.common.Transaction;
 import camel_case.GeneratedData;
@@ -11,12 +12,14 @@ import java.util.ArrayDeque;
 import java.util.Queue;
 
 public class MessageDispatcher {
+  private static final MessageType[] messageTypes = MessageType.values();
+
   private RobotController rc;
   private Robot robot;
 
   private Queue<Message> messageQueue = new ArrayDeque<>(16);
 
-  private MessageType[] messageTypes = MessageType.values();
+  private int possibleDelay = 0;
 
   private int totalCost = 0;
   private int messageCount = 0;
@@ -92,12 +95,14 @@ public class MessageDispatcher {
     lastHandledRound = currentRound - 1;
   }
 
-  public void handleIncomingMessages(int round) throws GameActionException {
+  private void handleIncomingMessages(int round) throws GameActionException {
     if (round <= 0) {
       return;
     }
 
-    for (Transaction transaction : rc.getBlock(round)) {
+    Transaction[] transactions = rc.getBlock(round);
+
+    for (Transaction transaction : transactions) {
       totalCost += transaction.getCost();
       messageCount++;
 
@@ -133,6 +138,14 @@ public class MessageDispatcher {
         }
       }
     }
+
+    if (transactions.length == GameConstants.NUMBER_OF_TRANSACTIONS_PER_BLOCK) {
+      possibleDelay++;
+    } else if (possibleDelay > 0) {
+      possibleDelay--;
+    }
+
+    System.out.println(possibleDelay);
   }
 
   private int createHash(int round) {
@@ -140,11 +153,13 @@ public class MessageDispatcher {
   }
 
   private boolean isHashValid(int hash, int round) {
-    return checkHash(hash, round)
-        || checkHash(hash, round - 1)
-        || checkHash(hash, round - 2)
-        || checkHash(hash, round - 3)
-        || checkHash(hash, round - 4);
+    for (int i = 0; i <= possibleDelay; i++) {
+      if (checkHash(hash, round - i)) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   private boolean checkHash(int hash, int round) {

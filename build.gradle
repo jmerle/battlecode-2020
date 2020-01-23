@@ -282,13 +282,43 @@ task generateData {
         def file = file("src/camel_case/GeneratedData.java")
         def rnd = ThreadLocalRandom.current()
 
-        for (int i = 1; i <= 3; i++) {
+        for (def i = 1; i <= 3; i++) {
             def number = 0
             while (number.abs() < 10) {
                 number = rnd.nextInt(-250, 251)
             }
 
             updateVariable(file, "MESSAGE_HASH_SECRET_$i", number)
+        }
+
+        for (def i = 1; i <= 5; i++) {
+            def locations = new ArrayList<String>()
+
+            def x = -i
+            def y = i
+
+            def dx = 1
+            def dy = 0
+
+            while (!locations.contains("{$x, $y}")) {
+                locations += "{$x, $y}"
+
+                x += dx
+                y += dy
+
+                if (x == i && y == i) {
+                    dx = 0
+                    dy = -1
+                } else if (x == i && y == -i) {
+                    dx = -1
+                    dy = 0
+                } else if (x == -i && y == -i) {
+                    dx = 0
+                    dy = 1
+                }
+            }
+
+            updateVariable(file, "RING_${i}_OFFSETS", "{${locations.join(", ")}}")
         }
     }
 }

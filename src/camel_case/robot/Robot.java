@@ -7,6 +7,7 @@ import camel_case.message.impl.*;
 import camel_case.util.Color;
 
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.PriorityQueue;
 
 public abstract class Robot {
@@ -85,12 +86,21 @@ public abstract class Robot {
   }
 
   protected void removeOrder(int id) {
-    orders.removeIf(order -> order.getId() == id);
+    Iterator<OrderMessage> it = orders.iterator();
+
+    while (it.hasNext()) {
+      OrderMessage order = it.next();
+
+      if (order.getId() == id) {
+        it.remove();
+        return;
+      }
+    }
   }
 
   protected boolean canDispatchOrderAt(
       MapLocation location, MapLocation hq, int maxElevationDifference) throws GameActionException {
-    if (hq != null && isAdjacentTo(location, hq)) {
+    if (hq != null && hq.distanceSquaredTo(location) <= 4) {
       return false;
     }
 
@@ -105,7 +115,17 @@ public abstract class Robot {
       return false;
     }
 
-    return !rc.isLocationOccupied(location);
+    RobotInfo robot = rc.senseRobotAtLocation(location);
+
+    if (robot == null) {
+      return true;
+    }
+
+    if (robot.getTeam() == enemyTeam) {
+      return false;
+    }
+
+    return !robot.getType().isBuilding();
   }
 
   protected Direction directionTowards(MapLocation from, MapLocation to) {

@@ -1,9 +1,7 @@
 package camel_case.robot.building;
 
-import battlecode.common.Direction;
-import battlecode.common.GameActionException;
-import battlecode.common.RobotController;
-import battlecode.common.RobotType;
+import battlecode.common.*;
+import camel_case.GeneratedData;
 import camel_case.message.impl.AllMinersSpawnedMessage;
 import camel_case.message.impl.OrderCanceledMessage;
 import camel_case.message.impl.OrderMessage;
@@ -11,6 +9,8 @@ import camel_case.util.Color;
 
 public class HQ extends Building {
   private int minersSpawned = 0;
+
+  private boolean shouldBuildDesignSchool = false;
 
   public HQ(RobotController rc) {
     super(rc, RobotType.HQ);
@@ -20,6 +20,10 @@ public class HQ extends Building {
   public void run() throws GameActionException {
     for (OrderMessage order : orders) {
       drawDot(order.getLocation(), Color.GREEN);
+    }
+
+    if (shouldBuildDesignSchool) {
+      shouldBuildDesignSchool = !dispatchDesignSchoolOrder();
     }
 
     if (!rc.isReady()) return;
@@ -37,7 +41,8 @@ public class HQ extends Building {
 
       if (minersSpawned == 5) {
         dispatchMessage(new AllMinersSpawnedMessage());
-        dispatchDesignSchoolOrder();
+        shouldBuildDesignSchool = !dispatchDesignSchoolOrder();
+        dispatchNetGunOrders();
       }
     }
   }
@@ -47,7 +52,7 @@ public class HQ extends Building {
     OrderMessage order = getOrder(message.getId());
 
     if (order != null && order.getRobotType() == RobotType.DESIGN_SCHOOL) {
-      dispatchDesignSchoolOrder();
+      shouldBuildDesignSchool = true;
     }
 
     super.onMessage(message);
@@ -63,7 +68,33 @@ public class HQ extends Building {
     return false;
   }
 
-  private void dispatchDesignSchoolOrder() {
-    // TODO(jmerle): Find best design school location and dispatch order
+  private boolean dispatchDesignSchoolOrder() throws GameActionException {
+    MapLocation hq = rc.getLocation();
+
+    for (int[] offset : GeneratedData.RING_2_OFFSETS) {
+      MapLocation location = hq.translate(offset[0], offset[1]);
+
+      if (canDispatchOrderAt(location, hq, 6)) {
+        dispatchMessage(new OrderMessage(0, RobotType.DESIGN_SCHOOL, location));
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  private void dispatchNetGunOrders() throws GameActionException {
+    int id = 10;
+
+    MapLocation hq = rc.getLocation();
+
+    for (int[] offset : GeneratedData.RING_2_OFFSETS) {
+      MapLocation location = hq.translate(offset[0], offset[1]);
+
+      if (canDispatchOrderAt(location, hq, 6)) {
+        dispatchMessage(new OrderMessage(id, RobotType.NET_GUN, location));
+        id++;
+      }
+    }
   }
 }

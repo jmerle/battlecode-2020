@@ -54,7 +54,14 @@ public class Miner extends Unit {
       dropOffLocations.add(senseHQ());
     }
 
-    senseSoup();
+    if (rc.getRoundNum() % 500 == 0) {
+      invalidSoupLocations.clear();
+      invalidInterestingLocations.clear();
+    }
+
+    if (soupLocations.size() < 10) {
+      senseSoup();
+    }
 
     if (!rc.isReady()) return;
 
@@ -139,6 +146,10 @@ public class Miner extends Unit {
         invalidInterestingLocations.add(rc.getLocation());
         soupNearbyMessageCooldown = 100;
       }
+
+      if (soupLocations.size() == 10) {
+        break;
+      }
     }
   }
 
@@ -158,9 +169,9 @@ public class Miner extends Unit {
     if (rc.canSenseLocation(orderLocation)) {
       RobotInfo robot = rc.senseRobotAtLocation(orderLocation);
 
-      if (robot != null && robot.getTeam() == enemyTeam) {
+      if (robot != null && (robot.getTeam() == enemyTeam || robot.getType().isBuilding())) {
         dispatchMessage(new OrderCanceledMessage(order.getId()));
-        return tryCompleteOrder();
+        return false;
       }
     }
 
@@ -186,6 +197,8 @@ public class Miner extends Unit {
         drawLine(rc.adjacentLocation(direction), Color.BLUE);
         rc.depositSoup(direction, rc.getSoupCarrying());
         return true;
+      } else {
+        dropOffLocations.remove(rc.adjacentLocation(direction));
       }
     }
 
@@ -198,9 +211,9 @@ public class Miner extends Unit {
     if ((canBuildRefineries && dropOffLocations.size() == 1 && dropOffLocations.contains(hq))
         || rc.getLocation().distanceSquaredTo(bestDropOff) > 50) {
       tryBuildRefinery();
-    } else {
-      tryMoveTo(bestDropOff);
     }
+
+    tryMoveTo(bestDropOff);
   }
 
   private void tryBuildRefinery() throws GameActionException {

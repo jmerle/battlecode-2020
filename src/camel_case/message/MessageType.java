@@ -6,6 +6,4 @@ public enum MessageType {
   ORDER,
   ORDER_COMPLETED,
   ORDER_CANCELED,
-
-  ALL_MINERS_SPAWNED,
 }

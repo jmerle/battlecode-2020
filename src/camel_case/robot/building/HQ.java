@@ -2,7 +2,6 @@ package camel_case.robot.building;
 
 import battlecode.common.*;
 import camel_case.GeneratedData;
-import camel_case.message.impl.AllMinersSpawnedMessage;
 import camel_case.message.impl.OrderCanceledMessage;
 import camel_case.message.impl.OrderMessage;
 import camel_case.util.Color;
@@ -11,7 +10,6 @@ public class HQ extends Building {
   private int minersSpawned = 0;
 
   private boolean shouldBuildDesignSchool = false;
-  private boolean hasDispatchedNetGunOrders = false;
 
   public HQ(RobotController rc) {
     super(rc, RobotType.HQ);
@@ -25,11 +23,6 @@ public class HQ extends Building {
 
     if (shouldBuildDesignSchool) {
       shouldBuildDesignSchool = !dispatchDesignSchoolOrder();
-    }
-
-    if (!hasDispatchedNetGunOrders && isHQSurrounded(rc.getLocation())) {
-      dispatchNetGunOrders();
-      hasDispatchedNetGunOrders = true;
     }
 
     if (!rc.isReady()) return;
@@ -46,7 +39,6 @@ public class HQ extends Building {
       minersSpawned++;
 
       if (minersSpawned == 5) {
-        dispatchMessage(new AllMinersSpawnedMessage());
         shouldBuildDesignSchool = !dispatchDesignSchoolOrder();
       }
     }
@@ -86,20 +78,5 @@ public class HQ extends Building {
     }
 
     return false;
-  }
-
-  private void dispatchNetGunOrders() throws GameActionException {
-    int id = 10;
-
-    MapLocation hq = rc.getLocation();
-
-    for (int[] offset : GeneratedData.RING_2_OFFSETS) {
-      MapLocation location = hq.translate(offset[0], offset[1]);
-
-      if (canDispatchOrderAt(location, hq, 6)) {
-        dispatchMessage(new OrderMessage(id, RobotType.NET_GUN, location));
-        id++;
-      }
-    }
   }
 }

@@ -3,8 +3,11 @@ package camel_case.robot.unit;
 import battlecode.common.*;
 import camel_case.util.Color;
 
+import java.util.List;
+
 public class Landscaper extends Unit {
-  MapLocation hq;
+  private MapLocation hq;
+  private MapLocation designSchool;
 
   public Landscaper(RobotController rc) {
     super(rc, RobotType.LANDSCAPER);
@@ -13,7 +16,11 @@ public class Landscaper extends Unit {
   @Override
   public void run() throws GameActionException {
     if (hq == null) {
-      hq = senseHQ();
+      hq = senseOwnRobot(RobotType.HQ);
+    }
+
+    if (designSchool == null) {
+      designSchool = senseOwnRobot(RobotType.DESIGN_SCHOOL);
     }
 
     if (!rc.isReady()) return;
@@ -22,6 +29,19 @@ public class Landscaper extends Unit {
       if (tryDigDirt(directionTowards(hq))) {
         return;
       }
+    }
+
+    if (isAdjacentTo(hq)) {
+      if (tryMoveAwayFromDesignSchool()) {
+        return;
+      }
+    } else {
+      List<MapLocation> availableRingOneLocations = getAvailableLocationsAround(hq);
+      if (!availableRingOneLocations.isEmpty()) {
+        tryMoveTo(availableRingOneLocations.get(0));
+      }
+
+      return;
     }
 
     if (rc.getDirtCarrying() > 0) {
@@ -74,37 +94,90 @@ public class Landscaper extends Unit {
     }
   }
 
-  private void tryDepositDirt() throws GameActionException {
-    MapLocation myLocation = rc.getLocation();
-    int myDistanceToHQ = myLocation.distanceSquaredTo(hq);
-
-    Direction bestDirection = Direction.CENTER;
-    int bestSoup = rc.senseSoup(myLocation);
+  private boolean tryMoveAwayFromDesignSchool() throws GameActionException {
+    Direction bestDirection = null;
+    int bestDistance = rc.getLocation().distanceSquaredTo(designSchool);
 
     for (Direction direction : adjacentDirections) {
-      MapLocation location = myLocation.add(direction);
+      MapLocation location = hq.add(direction);
 
-      if (myLocation.x != location.x && myLocation.y != location.y) {
+      if (rc.canSenseLocation(location) && rc.senseRobotAtLocation(location) == null) {
+        int distance = hq.add(direction).distanceSquaredTo(designSchool);
+
+        if (distance > bestDistance) {
+          bestDirection = direction;
+          bestDistance = distance;
+        }
+      }
+    }
+
+    return bestDirection != null && tryMoveTo(hq.add(bestDirection));
+  }
+
+  private boolean tryDepositDirt(Direction direction) throws GameActionException {
+    if (rc.canDepositDirt(direction)) {
+      if (direction == Direction.CENTER) {
+        drawDot(rc.getLocation(), Color.BLUE);
+      } else {
+        drawLine(rc.adjacentLocation(direction), Color.BLUE);
+      }
+
+      rc.depositDirt(direction);
+      return true;
+    }
+
+    return false;
+  }
+
+  private void tryDepositDirt() throws GameActionException {
+    Direction bestDirection = Direction.CENTER;
+    int bestElevation = rc.senseElevation(rc.getLocation());
+
+    int myStepsToHQ = stepsTo(hq);
+
+    for (Direction direction : adjacentDirections) {
+      MapLocation location = rc.adjacentLocation(direction);
+
+      RobotInfo robot = rc.senseRobotAtLocation(location);
+      if (robot != null && robot.getTeam() == enemyTeam && robot.getType().isBuilding()) {
+        tryDepositDirt(direction);
+        return;
+      }
+
+      if (stepsTo(location, hq) != myStepsToHQ) {
         continue;
       }
 
-      if (location.distanceSquaredTo(hq) > myDistanceToHQ) {
-        continue;
-      }
-
-      int soup = rc.senseSoup(location);
-      if (soup < bestSoup && rc.canDepositSoup(direction)) {
+      int elevation = rc.senseElevation(location);
+      if (elevation < bestElevation) {
         bestDirection = direction;
-        bestSoup = soup;
+        bestElevation = elevation;
       }
     }
 
-    if (bestDirection == Direction.CENTER) {
-      drawDot(myLocation, Color.BLUE);
-    } else {
-      drawLine(rc.adjacentLocation(bestDirection), Color.BLUE);
+    tryDepositDirt(bestDirection);
+  }
+
+  @Override
+  protected boolean tryMoveTo(MapLocation target) throws GameActionException {
+    if (!isAdjacentTo(target)) {
+      return super.tryMoveTo(target);
     }
 
-    rc.depositDirt(bestDirection);
+    Direction forward = directionTowards(target);
+
+    if (tryMove(forward)) {
+      return true;
+    }
+
+    if (rc.isLocationOccupied(target)) {
+      return false;
+    }
+
+    if (tryDigDirt(forward)) {
+      return true;
+    }
+
+    return tryDepositDirt(Direction.CENTER);
   }
 }

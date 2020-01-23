@@ -6,6 +6,7 @@ public class DesignSchool extends Building {
   private MapLocation hq;
 
   private int landscapersSpawned = 0;
+  private int requiredInRingOne = -1;
 
   public DesignSchool(RobotController rc) {
     super(rc, RobotType.DESIGN_SCHOOL);
@@ -14,22 +15,36 @@ public class DesignSchool extends Building {
   @Override
   public void run() throws GameActionException {
     if (hq == null) {
-      hq = senseHQ();
+      hq = senseOwnRobot(RobotType.HQ);
+    }
+
+    if (hq == null) {
+      return;
+    }
+
+    if (requiredInRingOne == -1) {
+      requiredInRingOne = getAvailableLocationsAround(hq).size();
     }
 
     if (!rc.isReady()) return;
 
-    if (!isHQSurrounded(hq)) {
-      if (landscapersSpawned < 8 && trySpawnMinerTowardsHQ()) {
-        landscapersSpawned++;
+    if (!orders.isEmpty()) {
+      return;
+    }
+
+    if (!isLocationSurrounded(hq)) {
+      if (landscapersSpawned < requiredInRingOne) {
+        if (trySpawnMinerTowards(hq)) {
+          landscapersSpawned++;
+        }
       }
 
       return;
     }
   }
 
-  private boolean trySpawnMinerTowardsHQ() throws GameActionException {
-    Direction forward = directionTowards(hq);
+  private boolean trySpawnMinerTowards(MapLocation location) throws GameActionException {
+    Direction forward = directionTowards(location);
 
     if (tryBuildRobot(RobotType.LANDSCAPER, forward)) {
       return true;

@@ -6,9 +6,7 @@ import camel_case.message.MessageDispatcher;
 import camel_case.message.impl.*;
 import camel_case.util.Color;
 
-import java.util.Comparator;
-import java.util.Iterator;
-import java.util.PriorityQueue;
+import java.util.*;
 
 public abstract class Robot {
   protected RobotController rc;
@@ -60,10 +58,6 @@ public abstract class Robot {
 
   public void onMessage(OrderCanceledMessage message) {
     removeOrder(message.getId());
-  }
-
-  public void onMessage(AllMinersSpawnedMessage message) {
-    // Let implementations override this
   }
 
   protected boolean tryBuildRobot(RobotType type, Direction direction) throws GameActionException {
@@ -132,14 +126,51 @@ public abstract class Robot {
     return !robot.getType().isBuilding();
   }
 
-  protected MapLocation senseHQ() {
+  protected MapLocation senseOwnRobot(RobotType robotType) {
     for (RobotInfo robot : rc.senseNearbyRobots(-1, myTeam)) {
-      if (robot.getType() == RobotType.HQ) {
+      if (robot.getType() == robotType) {
         return robot.getLocation();
       }
     }
 
     return null;
+  }
+
+  protected boolean isLocationSurrounded(MapLocation location) throws GameActionException {
+    return getAvailableLocationsAround(location).isEmpty();
+  }
+
+  protected List<MapLocation> getAvailableLocationsAround(MapLocation hq)
+      throws GameActionException {
+    List<MapLocation> locations = new ArrayList<>();
+
+    for (Direction direction : adjacentDirections) {
+      MapLocation location = hq.add(direction);
+
+      if (!isOnTheMap(location)) {
+        continue;
+      }
+
+      if (!rc.canSenseLocation(location)) {
+        locations.add(location);
+        continue;
+      }
+
+      RobotInfo robot = rc.senseRobotAtLocation(location);
+
+      if (robot == null) {
+        locations.add(location);
+        continue;
+      }
+
+      if (robot.getTeam() == myTeam
+          && robot.getType().canMove()
+          && robot.getType() != RobotType.LANDSCAPER) {
+        locations.add(location);
+      }
+    }
+
+    return locations;
   }
 
   protected Direction directionTowards(MapLocation from, MapLocation to) {

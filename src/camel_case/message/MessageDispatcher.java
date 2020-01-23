@@ -132,9 +132,6 @@ public class MessageDispatcher {
           case ORDER_CANCELED:
             robot.onMessage(new OrderCanceledMessage(data));
             break;
-          case ALL_MINERS_SPAWNED:
-            robot.onMessage(new AllMinersSpawnedMessage(data));
-            break;
         }
       }
     }
@@ -144,8 +141,6 @@ public class MessageDispatcher {
     } else if (possibleDelay > 0) {
       possibleDelay--;
     }
-
-    System.out.println(possibleDelay);
   }
 
   private int createHash(int round) {

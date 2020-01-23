@@ -1,7 +1,10 @@
 package camel_case.robot.unit;
 
 import battlecode.common.*;
-import camel_case.message.impl.*;
+import camel_case.message.impl.OrderCanceledMessage;
+import camel_case.message.impl.OrderCompletedMessage;
+import camel_case.message.impl.OrderMessage;
+import camel_case.message.impl.SoupNearbyMessage;
 import camel_case.util.BetterRandom;
 import camel_case.util.Color;
 
@@ -47,11 +50,11 @@ public class Miner extends Unit {
   @Override
   public void run() throws GameActionException {
     if (hq == null) {
-      hq = senseHQ();
+      hq = senseOwnRobot(RobotType.HQ);
     }
 
     if (dropOffLocations.isEmpty() && !canBuildRefineries) {
-      dropOffLocations.add(senseHQ());
+      dropOffLocations.add(senseOwnRobot(RobotType.HQ));
     }
 
     if (rc.getRoundNum() % 500 == 0) {
@@ -64,6 +67,11 @@ public class Miner extends Unit {
     }
 
     if (!rc.isReady()) return;
+
+    if (!dropOffLocations.contains(hq) && isAdjacentTo(hq)) {
+      tryMoveRandom();
+      return;
+    }
 
     if (tryCompleteOrder()) {
       return;
@@ -105,6 +113,10 @@ public class Miner extends Unit {
   public void onMessage(OrderCompletedMessage message) {
     OrderMessage order = getOrder(message.getId());
 
+    if (order != null && order.getRobotType() == RobotType.DESIGN_SCHOOL) {
+      canBuildRefineries = true;
+    }
+
     if (order != null && order.getRobotType() == RobotType.REFINERY) {
       if (dropOffLocations.size() == 1 && dropOffLocations.contains(hq)) {
         dropOffLocations.clear();
@@ -114,11 +126,6 @@ public class Miner extends Unit {
     }
 
     super.onMessage(message);
-  }
-
-  @Override
-  public void onMessage(AllMinersSpawnedMessage message) {
-    canBuildRefineries = true;
   }
 
   private void senseSoup() {
@@ -219,7 +226,7 @@ public class Miner extends Unit {
       }
     }
 
-    MapLocation hq = senseHQ();
+    MapLocation hq = senseOwnRobot(RobotType.HQ);
 
     for (Direction direction : adjacentDirections) {
       MapLocation location = rc.adjacentLocation(direction);
